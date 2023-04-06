@@ -61,4 +61,10 @@ dependencies {
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
 
+    implementation files('libs/huelocalsdk.jar')
+    implementation files('libs/huesdkresources.jar')
+    implementation files('libs/tablelayout.jar')
+
+    //implementation 'com.philips.lighting:hue-sdk:3.1.0'
+
 }
