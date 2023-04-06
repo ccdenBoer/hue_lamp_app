@@ -1,23 +1,16 @@
 package com.example.myapplication
 
 import android.os.Bundle
-import android.text.style.BackgroundColorSpan
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -32,7 +25,29 @@ class MainActivity : ComponentActivity() {
 
         setContent {
             MyApplicationTheme {
-                MyApp()
+                Surface(
+                    color = Color(0xFFFFE0B5),
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .background(
+                                    color = Color(0xFF462521)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Hue Connect",
+                                color = Color(0xFF8A6552),
+                                style = MaterialTheme.typography.h5
+                            )
+                        }
+                        MyApp()
+                    }
+                }
             }
         }
     }
@@ -44,7 +59,7 @@ fun MyApp() {
 
     NavHost(navController, startDestination = "connectionList") {
         composable("connectionList") {
-            ConnectionList(
+            HueLampConnections(
                 connections = listOf(
                     "lamp 1",
                     "lamp 2",
@@ -69,7 +84,7 @@ fun MyApp() {
 }
 
 @Composable
-fun ConnectionList(
+fun HueLampConnections(
     connections: List<String>,
     onConnectionClick: (String) -> Unit
 ) {
