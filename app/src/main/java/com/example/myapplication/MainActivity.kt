@@ -19,57 +19,69 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-//        val lastAccessPoint = PHAccessPoint()
-//        lastAccessPoint.setIpAddress("192.168.1.1:8000") // Enter the IP Address and Port your Emulator is running on here.
-//
-//        lastAccessPoint.setUsername("newdeveloper") // newdeveloper is loaded by the emulator and set on the WhiteList.
-//
-//        phHueSDK.connect(lastAccessPoint)
-
         setContent {
             MyApplicationTheme {
-                Surface(color = Color(0xFFFFE0B5)) {
-                    Column(modifier = Modifier.fillMaxSize()) {
-                        Box(
-                            modifier = Modifier
-                                .height(48.dp)
-                                .fillMaxWidth()
-                                .background(Color(0xFF462521))
-                        ) {
-                            Text(
-                                text = "Hue Connect",
-                                color = Color(0xFF8A6552),
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(
-                                    start = 16.dp,
-                                    top = 8.dp,
-                                    bottom = 8.dp
-                                )
-                                    .align(Alignment.CenterStart)
-                            )
-                        }
-                        ConnectionList(connections = listOf("lamp 1", "lamp 2", "lamp 3"))
-                    }
-                }
+                MyApp()
             }
         }
     }
 }
+
 @Composable
-fun ConnectionList(connections: List<String>) {
+fun MyApp() {
+    val navController = rememberNavController()
+
+    NavHost(navController, startDestination = "connectionList") {
+        composable("connectionList") {
+            ConnectionList(
+                connections = listOf(
+                    "lamp 1",
+                    "lamp 2",
+                    "lamp 3"
+                ),
+                onConnectionClick = {
+                    navController.navigate("settings/$it")
+                }
+            )
+        }
+        composable(
+            "settings/{connectionName}",
+            arguments = listOf(
+                navArgument("connectionName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val connectionName =
+                backStackEntry.arguments?.getString("connectionName") ?: ""
+            SettingsScreen(connectionName)
+        }
+    }
+}
+
+@Composable
+fun ConnectionList(
+    connections: List<String>,
+    onConnectionClick: (String) -> Unit
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(top = 10.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         connections.forEach { connection ->
-            ConnectionItem(name = connection, onClick = { /* Handle connection click */ })
+            ConnectionItem(name = connection, onClick = {
+                onConnectionClick(connection)
+            })
         }
     }
 }
@@ -109,70 +121,15 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    MyApplicationTheme {
-        Greeting("Android")
-    }
-}
-
-@Composable
-fun ConnectButton(){
-    Row(
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.Start
+fun SettingsScreen(connectionName: String) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
     ) {
-        Button(
-            onClick = {
-                //connect
-            },
-            modifier = Modifier
-                .padding(top = 20.dp, start = 30.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = MaterialTheme.colors.onPrimary
-            )
-
-        ) {
-
-        }
-
+        Text(
+            text = "Settings for $connectionName",
+            style = MaterialTheme.typography.h5
+        )
     }
-}
-
-@Composable
-fun SetButton(){
-    Row(
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Button(
-            onClick = {
-                //send data
-            },
-            modifier = Modifier
-                .padding(top = 20.dp, start = 30.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = MaterialTheme.colors.onPrimary
-            )
-
-        ) {
-
-        }
-
-    }
-}
-
-@Composable
-fun DataCard(){
-    LazyColumn {
-
-    }
-
 }
