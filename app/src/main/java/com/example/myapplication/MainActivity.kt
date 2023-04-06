@@ -7,11 +7,14 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -101,6 +104,7 @@ fun HueLampConnections(
     }
 }
 
+
 @Composable
 fun ConnectionItem(name: String, onClick: () -> Unit) {
     Box(
@@ -134,7 +138,6 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
         }
     }
 }
-
 @Composable
 fun SettingsScreen(connectionName: String) {
     Column(
@@ -146,5 +149,57 @@ fun SettingsScreen(connectionName: String) {
             text = "Settings for $connectionName",
             style = MaterialTheme.typography.h5
         )
+        DetailInfoTextField()
+        PowerSwitch()
+        BrightnessSlider()
+    }
+}
+
+@Composable
+fun DetailInfoTextField() {
+    TextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        value = "",
+        onValueChange = { }
+    )
+}
+
+@Composable
+fun PowerSwitch() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text(text = "Power:")
+        Button(
+            onClick = { /* Handle power switch click */ },
+            modifier = Modifier.padding(start = 8.dp),
+            content = {
+
+            }
+        )
+    }
+}
+
+@Composable
+fun BrightnessSlider() {
+    Slider(
+        value = 0f,
+        onValueChange = { /* Handle brightness change */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    )
+}
+
+
+
+@Preview
+@Composable
+fun SettingsScreenPreview() {
+    Surface {
+        SettingsScreen(connectionName = "lamp 1")
     }
 }
