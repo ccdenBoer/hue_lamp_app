@@ -110,10 +110,6 @@ class MainActivity : ComponentActivity() {
         HueCommunication.turnLightOn()
         sleep(1000)
 
-        Log.d(TAG, "requesting light 1")
-        HueCommunication.requestLight("1")
-        sleep(1000)
-
 
         //HueCommunication.makeRequest("/lights/1/state", "PUT", "{\"on\":false}")
     }

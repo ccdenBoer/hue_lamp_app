@@ -8,6 +8,7 @@ import android.os.SystemClock.sleep
 import android.text.format.Formatter
 import android.util.Log
 import androidx.core.content.ContentProviderCompat.requireContext
+import com.example.myapplication.HueCommunication.Companion.selectedLight
 import com.example.myapplication.data.Light
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -26,7 +27,7 @@ class HueCommunication {
         val TAG = "HueCommunication"
         var bridge = ""
         var ip = "10.0.2.2/api/"
-        var selectedLight = "1"
+        var selectedLight = ""
         var latesResponse: String? = null
         var lights: Map<String, Light> = emptyMap()
 
@@ -60,23 +61,10 @@ class HueCommunication {
             this.selectedLight = selectedLight
         }
 
-        fun requestAllLightInfo() {
-
-        }
-
         fun requestLights() {
             Log.d(TAG, "Requesting lights")
             makeRequest("/lights", "GET", "", "request lights")
 
-
-        }
-
-        fun requestLight(light: String) {
-            Log.d(TAG, "Requesting light: $light")
-            makeRequest("/lights/$light", "GET", "", "request light")
-        }
-
-        fun getAllLightInfo() {
 
         }
 
@@ -148,9 +136,13 @@ class HueCommunication {
                             Log.d("$TAG : $tag", response.toString())
                             val mapper = ObjectMapper()
                             when (tag) {
-                                "request lights" -> lights = mapper.readValue(
-                                    response.toString(),
-                                    object : TypeReference<Map<String, Light>>() {})
+                                "request lights" -> {
+                                    lights = mapper.readValue(
+                                        response.toString(),
+                                        object : TypeReference<Map<String, Light>>() {})
+                                    selectLight(lights.keys.first())
+                                }
+
                             }
                         } else {
                             println("GET request failed with response code $responseCode")
