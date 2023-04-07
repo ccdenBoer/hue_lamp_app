@@ -45,8 +45,6 @@ import java.net.URL
 
 class MainActivity : ComponentActivity() {
     val TAG = "MainActivity"
-    var bridge = ""
-    val ip = "10.0.2.2:100/api/"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -79,126 +77,66 @@ class MainActivity : ComponentActivity() {
         }
 
 
-        makeBridgeConnection()
+        HueCommunication.makeBridgeConnection("newuser")
 
         Log.d(TAG, "waiting for bridge")
 
-        while (bridge.equals(""))
+        while (HueCommunication.bridge.equals(""))
             sleep(10)
 
-        makeBridgeConnection()
 
-        Log.d(TAG, "go bridge")
-        makeRequest(ip, "/lights/1/state", "PUT", "{\"on\":false}")
+        HueCommunication.requestLights()
 
+        Log.d(TAG, "searching lights")
+        HueCommunication.searchLights()
+        sleep(1000)
+        Log.d(TAG, "setting status")
+        HueCommunication.setLightStatus(true, 200, 200, 10000)
+        sleep(1000)
+
+        Log.d(TAG, "turning light on")
+        HueCommunication.turnLightOn()
+        sleep(1000)
+        Log.d(TAG, "turning light off")
+        HueCommunication.turnLightOff()
+        sleep(1000)
+        Log.d(TAG, "turning light on")
+        HueCommunication.turnLightOn()
+        sleep(1000)
+        Log.d(TAG, "requesting light info")
+        HueCommunication.requestLights()
+        sleep(1000)
+        Log.d(TAG, "requesting light 1")
+        HueCommunication.requestLight("1")
+        sleep(1000)
+
+
+        //HueCommunication.makeRequest("/lights/1/state", "PUT", "{\"on\":false}")
     }
 
-    private fun makeBridgeConnection() {
-        val username = "coen1" // Replace with your Hue bridge username
-        val bridgeIp = "10.0.2.2:100/api" // Replace with your Hue bridge IP address
-        val lightId = "1" // Replace with the ID of the light you want to control
-        val message = "{\"devicetype\":\"my_hue_app#coen1\"}"
-        val method = "GET"
-        HueBridgeTask().execute(bridgeIp, username, lightId, message, method)
-        Log.d(TAG, "Making bridge")
-
-    }
-
-    private fun makeRequest(adress: String, command: String, method: String, body: String){
-        HueTask().execute(adress, command, method, body)
-    }
-
-    inner class HueBridgeTask : AsyncTask<String, Void, String>() {
-
-        override fun doInBackground(vararg params: String?): String {
-            var data =  "error"
-            Log.d(TAG, "Staring new request")
-            while(data.contains("error")){
-                val urlString = "http://" + params[0]
-                Log.d(TAG, urlString)
-                val url = URL(urlString)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = params[4]
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-                val payload = params[3]
-                val writer = OutputStreamWriter(connection.outputStream)
-                writer.write(payload)
-                writer.flush()
-                writer.close()
-
-                val responseCode = connection.responseCode
-                data = connection.inputStream.bufferedReader().readText()
-                Log.d(TAG, "Response: " + data)
-                sleep(100)
-            }
-            val arr = JSONArray(data)
-            val jObj: JSONObject = arr.getJSONObject(0)
-            bridge = jObj.getJSONObject("success").getString("username")
-            return data
-        }
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-            Log.d(TAG, "onpostexecute")
-            if (result != null) {
-                Log.d(TAG, result)
-            }
-
-            if (result != null) {
-                if(result.contains("username")){
-                    val arr = JSONArray(result)
-                    val jObj: JSONObject = arr.getJSONObject(0)
-                    bridge = jObj.getJSONObject("success").getString("username")
-                    Log.d(TAG, bridge)
-                }
-            }
-        }
-    }
-    inner class HueTask : AsyncTask<String, Void, String>() {
-
-        override fun doInBackground(vararg params: String?): String {
-            var data =  "error"
-            Log.d(TAG, "starting new general request")
-            while(data.contains("error")){
-                val addres = params[0]
-                val command = params[1]
-                val method = params[2]
-                val body = params[3]
-
-                val urlString = "http://" + addres + bridge + command
-                Log.d(TAG, urlString)
-                val url = URL(urlString)
-                val connection = url.openConnection() as HttpURLConnection
-                connection.requestMethod = method
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.doOutput = true
-                val payload = body
-                val writer = OutputStreamWriter(connection.outputStream)
-                writer.write(payload)
-                writer.flush()
-                writer.close()
-
-                val responseCode = connection.responseCode
-                data = connection.inputStream.bufferedReader().readText()
-                Log.d(TAG, "Response: " + data)
-                sleep(100)
-            }
-
-            return data
-        }
-
-        override fun onPostExecute(result: String?) {
-            super.onPostExecute(result)
-
-
-
-        }
-    }
 }
 
-fun bridgeReceieved(bridge: String){
+fun test() {
+    val username = "b8f5857bf51c4ec4720c5296fe69812"
+    val urlString = "http://10.0.2.2:80/api/$username/lights"
+    val url = URL(urlString)
+    val connection = url.openConnection() as HttpURLConnection
+    connection.requestMethod = "GET"
 
+    val responseCode = connection.responseCode
+    if (responseCode == HttpURLConnection.HTTP_OK) {
+        val inputStream = connection.inputStream
+        val response = StringBuffer()
+        inputStream.bufferedReader().useLines { lines ->
+            lines.forEach {
+                response.append(it)
+            }
+        }
+        inputStream.close()
+        println(response.toString())
+    } else {
+        println("GET request failed with response code $responseCode")
+    }
 }
 
 
@@ -284,6 +222,7 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun SettingsScreen(connectionName: String) {
     Column(
@@ -339,7 +278,6 @@ fun BrightnessSlider() {
             .padding(16.dp)
     )
 }
-
 
 
 @Preview
