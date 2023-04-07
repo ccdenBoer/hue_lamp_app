@@ -76,7 +76,12 @@ class MainActivity : ComponentActivity() {
             }
         }
 
+        test()
 
+    }
+
+
+    fun test() {
         HueCommunication.makeBridgeConnection("newuser")
 
         Log.d(TAG, "waiting for bridge")
@@ -93,11 +98,11 @@ class MainActivity : ComponentActivity() {
             sleep(10)
         Log.d(TAG, "Lights: ${HueCommunication.lights.size}")
         HueCommunication.lights.forEach { light ->
-            Log.d(TAG, "Name: ${light.value.name}")
+            Log.d(TAG, "Name: ${light.value.name} cm: ${light.value.state?.hue}")
         }
         sleep(1000)
         Log.d(TAG, "setting status")
-        HueCommunication.setLightStatus(true, 200, 200, 10000)
+        HueCommunication.setLightStatus(true, 254, 254, 43690)
         sleep(1000)
 
         Log.d(TAG, "turning light on")
@@ -109,33 +114,8 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "turning light on")
         HueCommunication.turnLightOn()
         sleep(1000)
-
-
-        //HueCommunication.makeRequest("/lights/1/state", "PUT", "{\"on\":false}")
-    }
-
-}
-
-fun test() {
-    val username = "b8f5857bf51c4ec4720c5296fe69812"
-    val urlString = "http://10.0.2.2:80/api/$username/lights"
-    val url = URL(urlString)
-    val connection = url.openConnection() as HttpURLConnection
-    connection.requestMethod = "GET"
-
-    val responseCode = connection.responseCode
-    if (responseCode == HttpURLConnection.HTTP_OK) {
-        val inputStream = connection.inputStream
-        val response = StringBuffer()
-        inputStream.bufferedReader().useLines { lines ->
-            lines.forEach {
-                response.append(it)
-            }
-        }
-        inputStream.close()
-        println(response.toString())
-    } else {
-        println("GET request failed with response code $responseCode")
+        HueCommunication.lights.get("1")?.state?.hue = 21845
+        HueCommunication.lights.get("1")?.let { HueCommunication.setLightStatus(it) }
     }
 }
 

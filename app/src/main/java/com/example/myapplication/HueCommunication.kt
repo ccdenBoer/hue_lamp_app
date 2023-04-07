@@ -102,6 +102,12 @@ class HueCommunication {
             }
         }
 
+        fun setLightStatus(light: Light) {
+            Log.d(TAG, "setting light status")
+            val objectMapper = ObjectMapper()
+            setLightStatus(light.state?.on!!, light.state!!.sat!!, light.state!!.bri!!, light.state!!.hue!!)
+        }
+
         private fun makeRequest(
             command: String,
             method: String,
