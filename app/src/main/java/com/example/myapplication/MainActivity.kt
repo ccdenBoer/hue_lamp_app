@@ -12,11 +12,24 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.material.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.navigation.NavType
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.philips.lighting.hue.sdk.*
 import com.philips.lighting.hue.sdk.exception.*
@@ -36,20 +49,30 @@ class MainActivity : ComponentActivity() {
     val ip = "10.0.2.2:100/api/"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        //lastAccessPoint.setIpAddress("10.0.2.2:800") // Enter the IP Address and Port your Emulator is running on here.
-        //lastAccessPoint.setUsername("coen1") // newdeveloper is loaded by the emulator and set on the WhiteList.
 
         setContent {
             MyApplicationTheme {
-                // A surface container using the 'background' color from the theme
                 Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colors.background
+                    color = Color(0xFFFFE0B5),
+                    modifier = Modifier.fillMaxSize()
                 ) {
-                    Scaffold { innerpadding ->
-                        ConnectButton()
-                        SetButton()
-                        DataCard()
+                    Column {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(48.dp)
+                                .background(
+                                    color = Color(0xFF462521)
+                                ),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text(
+                                text = "Hue Connect",
+                                color = Color(0xFF8A6552),
+                                style = MaterialTheme.typography.h5
+                            )
+                        }
+                        MyApp()
                     }
                 }
             }
@@ -180,120 +203,149 @@ fun bridgeReceieved(bridge: String){
 
 
 @Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
-}
+fun MyApp() {
+    val navController = rememberNavController()
 
-@Preview(showBackground = true)
-@Composable
-fun DefaultPreview() {
-    MyApplicationTheme {
-        Greeting("Android")
-    }
-}
-
-@Composable
-fun ConnectButton(){
-    Row(
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.End
-    ) {
-        Button(
-            onClick = {
-                //connect
-            },
-            modifier = Modifier
-                .padding(top = 20.dp, start = 30.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = MaterialTheme.colors.onPrimary
-            )
-
-        ) {
-            Text(
-                text = "Connect",
-                color = MaterialTheme.colors.onPrimary
+    NavHost(navController, startDestination = "connectionList") {
+        composable("connectionList") {
+            HueLampConnections(
+                connections = listOf(
+                    "lamp 1",
+                    "lamp 2",
+                    "lamp 3"
+                ),
+                onConnectionClick = {
+                    navController.navigate("settings/$it")
+                }
             )
         }
-
+        composable(
+            "settings/{connectionName}",
+            arguments = listOf(
+                navArgument("connectionName") { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val connectionName =
+                backStackEntry.arguments?.getString("connectionName") ?: ""
+            SettingsScreen(connectionName)
+        }
     }
 }
 
 @Composable
-fun SetButton(){
-    Row(
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.Start
+fun HueLampConnections(
+    connections: List<String>,
+    onConnectionClick: (String) -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(top = 10.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
-        Button(
-            onClick = {
-                //send data
-            },
-            modifier = Modifier
-                .padding(top = 20.dp, start = 30.dp),
-            colors = ButtonDefaults.buttonColors(
-                backgroundColor = MaterialTheme.colors.primary,
-                contentColor = MaterialTheme.colors.onPrimary
-            )
+        connections.forEach { connection ->
+            ConnectionItem(name = connection, onClick = {
+                onConnectionClick(connection)
+            })
+        }
+    }
+}
 
+
+@Composable
+fun ConnectionItem(name: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(Color(0xFF8A6552))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(16.dp)
         ) {
             Text(
-                text = "set",
-                color = MaterialTheme.colors.onPrimary
+                text = name,
+                style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
             )
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            ) {
+                Text(
+                    text = "Connect",
+                    style = MaterialTheme.typography.button.copy(color = Color(0xFF462521))
+                )
+            }
         }
-
+    }
+}
+@Composable
+fun SettingsScreen(connectionName: String) {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text(
+            text = "Settings for $connectionName",
+            style = MaterialTheme.typography.h5
+        )
+        DetailInfoTextField()
+        PowerSwitch()
+        BrightnessSlider()
     }
 }
 
 @Composable
-fun DataCard(){
-    LazyColumn {
-
-    }
-
+fun DetailInfoTextField() {
+    TextField(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        value = "",
+        onValueChange = { }
+    )
 }
 
-class PHListener : PHSDKListener {
-    val TAG = "PHSDKListener"
-    override fun onAccessPointsFound(accessPoints: List<PHAccessPoint>) {
-        Log.d(TAG, "accespoints found")
-        // Handle access points found
-    }
+@Composable
+fun PowerSwitch() {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier.padding(16.dp)
+    ) {
+        Text(text = "Power:")
+        Button(
+            onClick = { /* Handle power switch click */ },
+            modifier = Modifier.padding(start = 8.dp),
+            content = {
 
-    override fun onCacheUpdated(flags: List<Int>, bridge: PHBridge) {
-        Log.d(TAG, "cache updated found")
-        // Handle cache updated
-    }
-
-    override fun onBridgeConnected(bridge: PHBridge, username: String) {
-        Log.d(TAG, "bridge connected found: $username")
-        // Handle bridge connected
-    }
-
-    override fun onAuthenticationRequired(accessPoint: PHAccessPoint) {
-        Log.d(TAG, "authentication required")
-        // Handle authentication required
-    }
-
-    override fun onConnectionResumed(bridge: PHBridge) {
-        Log.d(TAG, "connection resumed")
-        // Handle connection resumed
-    }
-
-    override fun onConnectionLost(accessPoint: PHAccessPoint) {
-        Log.d(TAG, "connection lost")
-        // Handle connection lost
-    }
-
-    override fun onError(code: Int, message: String) {
-        Log.e(TAG, "error: code: ${code} message: $message")
-        // Handle error
-    }
-
-    override fun onParsingErrors(parsingErrors: List<PHHueParsingError>) {
-        Log.e(TAG, "parsing errors ${parsingErrors.forEach({it.message})}")
-        // Handle parsing errors
+            }
+        )
     }
 }
 
+@Composable
+fun BrightnessSlider() {
+    Slider(
+        value = 0f,
+        onValueChange = { /* Handle brightness change */ },
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(16.dp)
+    )
+}
+
+
+
+@Preview
+@Composable
+fun SettingsScreenPreview() {
+    Surface {
+        SettingsScreen(connectionName = "lamp 1")
+    }
+}
