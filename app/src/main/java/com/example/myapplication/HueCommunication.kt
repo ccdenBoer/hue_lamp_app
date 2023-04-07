@@ -8,6 +8,9 @@ import android.os.SystemClock.sleep
 import android.text.format.Formatter
 import android.util.Log
 import androidx.core.content.ContentProviderCompat.requireContext
+import com.example.myapplication.data.Light
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -25,6 +28,7 @@ class HueCommunication {
         var ip = "10.0.2.2/api/"
         var selectedLight = "1"
         var latesResponse: String? = null
+        var lights: Map<String, Light> = emptyMap()
 
         fun makeBridgeConnection(username: String) {
             val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
@@ -62,7 +66,7 @@ class HueCommunication {
 
         fun requestLights() {
             Log.d(TAG, "Requesting lights")
-            makeRequest("/lights", "GET", "", "request light")
+            makeRequest("/lights", "GET", "", "request lights")
 
 
         }
@@ -117,14 +121,14 @@ class HueCommunication {
             tag: String
         ) {
             if (bridge.isNotEmpty()) {
-                val networkThread = object: Thread() {
+                val networkThread = object : Thread() {
                     override fun run() {
                         val urlString = "http://$ip$bridge$command"
                         val url = URL(urlString)
                         val connection = url.openConnection() as HttpURLConnection
                         connection.requestMethod = method
 
-                        if(body.isNotEmpty()){
+                        if (body.isNotEmpty()) {
                             val writer = OutputStreamWriter(connection.outputStream)
                             writer.write(body)
                             writer.flush()
@@ -141,7 +145,13 @@ class HueCommunication {
                                 }
                             }
                             inputStream.close()
-                            Log.d("$TAG : $tag",response.toString())
+                            Log.d("$TAG : $tag", response.toString())
+                            val mapper = ObjectMapper()
+                            when (tag) {
+                                "request lights" -> lights = mapper.readValue(
+                                    response.toString(),
+                                    object : TypeReference<Map<String, Light>>() {})
+                            }
                         } else {
                             println("GET request failed with response code $responseCode")
                         }
@@ -211,6 +221,7 @@ class HueCommunication {
                 latesResponse = result
             }
         }
+    }
 }
 
 

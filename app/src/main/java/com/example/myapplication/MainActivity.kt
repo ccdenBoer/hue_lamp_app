@@ -87,8 +87,14 @@ class MainActivity : ComponentActivity() {
 
         HueCommunication.requestLights()
 
-        Log.d(TAG, "searching lights")
-        HueCommunication.searchLights()
+        Log.d(TAG, "requesting light info")
+        HueCommunication.requestLights()
+        while (HueCommunication.lights.isEmpty())
+            sleep(10)
+        Log.d(TAG, "Lights: ${HueCommunication.lights.size}")
+        HueCommunication.lights.forEach { light ->
+            Log.d(TAG, "Name: ${light.value.name}")
+        }
         sleep(1000)
         Log.d(TAG, "setting status")
         HueCommunication.setLightStatus(true, 200, 200, 10000)
@@ -103,9 +109,7 @@ class MainActivity : ComponentActivity() {
         Log.d(TAG, "turning light on")
         HueCommunication.turnLightOn()
         sleep(1000)
-        Log.d(TAG, "requesting light info")
-        HueCommunication.requestLights()
-        sleep(1000)
+
         Log.d(TAG, "requesting light 1")
         HueCommunication.requestLight("1")
         sleep(1000)
