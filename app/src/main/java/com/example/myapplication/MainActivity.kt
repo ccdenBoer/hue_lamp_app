@@ -1,8 +1,17 @@
 package com.example.myapplication
 
+import android.os.AsyncTask
 import android.os.Bundle
+import android.os.SystemClock.sleep
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -17,6 +26,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -25,7 +35,20 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.github.skydoves.colorpicker.compose.*
+import com.philips.lighting.hue.sdk.*
+import com.philips.lighting.hue.sdk.exception.*
+import com.philips.lighting.hue.sdk.utilities.*
+import com.philips.lighting.model.PHBridge
+import com.philips.lighting.model.PHHueParsingError
+import org.json.JSONArray
+import org.json.JSONObject
+import java.io.OutputStreamWriter
+import java.net.HttpURLConnection
+import java.net.URL
+
+
 class MainActivity : ComponentActivity() {
+    val TAG = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -56,8 +79,50 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+
+        test()
+
+    }
+
+
+    fun test() {
+        HueCommunication.makeBridgeConnection("newuser")
+
+        Log.d(TAG, "waiting for bridge")
+
+        while (HueCommunication.bridge.equals(""))
+            sleep(10)
+
+
+        HueCommunication.requestLights()
+
+        Log.d(TAG, "requesting light info")
+        HueCommunication.requestLights()
+        while (HueCommunication.lights.isEmpty())
+            sleep(10)
+        Log.d(TAG, "Lights: ${HueCommunication.lights.size}")
+        HueCommunication.lights.forEach { light ->
+            Log.d(TAG, "Name: ${light.value.name} cm: ${light.value.state?.hue}")
+        }
+        sleep(1000)
+        Log.d(TAG, "setting status")
+        HueCommunication.setLightStatus(true, 254, 254, 43690)
+        sleep(1000)
+
+        Log.d(TAG, "turning light on")
+        HueCommunication.turnLightOn()
+        sleep(1000)
+        Log.d(TAG, "turning light off")
+        HueCommunication.turnLightOff()
+        sleep(1000)
+        Log.d(TAG, "turning light on")
+        HueCommunication.turnLightOn()
+        sleep(1000)
+        HueCommunication.lights.get("1")?.state?.hue = 21845
+        HueCommunication.lights.get("1")?.let { HueCommunication.setLightStatus(it) }
     }
 }
+
 
 @Composable
 fun MyApp() {
@@ -140,6 +205,7 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
         }
     }
 }
+
 @Composable
 fun SettingsScreen(
     connectionName: String,
