@@ -6,11 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -21,6 +24,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.github.skydoves.colorpicker.compose.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -140,6 +144,8 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
 }
 @Composable
 fun SettingsScreen(connectionName: String) {
+    var selectedColor by remember { mutableStateOf(Color.White) }
+
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -152,6 +158,15 @@ fun SettingsScreen(connectionName: String) {
         DetailInfoTextField()
         PowerSwitch()
         BrightnessSlider()
+        ColorPicker(onColorSelected = { color ->
+            selectedColor = color
+        })
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .padding(16.dp)
+                .background(selectedColor)
+        )
     }
 }
 
@@ -201,5 +216,37 @@ fun BrightnessSlider() {
 fun SettingsScreenPreview() {
     Surface {
         SettingsScreen(connectionName = "lamp 1")
+    }
+}
+
+@Composable
+fun ColorPicker(
+    onColorSelected: (Color) -> Unit
+) {
+    val colors = listOf(
+        Color(0xFFFF0000), // red
+        Color(0xFFFFA500), // orange
+        Color(0xFFFFFF00), // yellow
+        Color(0xFF008000), // green
+        Color(0xFF0000FF), // blue
+        Color(0xFF4B0082), // indigo
+        Color(0xFF9400D3)  // violet
+    )
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(colors.size) { index ->
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(colors[index])
+                    .clickable {
+                        onColorSelected(colors[index])
+                    }
+            )
+        }
     }
 }
