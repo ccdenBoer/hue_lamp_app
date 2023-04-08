@@ -267,7 +267,6 @@ fun SettingsScreen(
 ) {
     var selectedColor by remember { mutableStateOf(Color.White) }
     var light = HueCommunication.lights[HueCommunication.selectedLight]
-    var brightness by remember { mutableStateOf(0f) }
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -303,8 +302,7 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 4.dp),
-            light = light,
-            brightness = brightness
+            light = light
         )
         Text(
             text = "Color",
@@ -318,7 +316,7 @@ fun SettingsScreen(
                 light.state!!.hue = newColors.first
                 light.state!!.sat = newColors.second.toInt()
                 light.state!!.bri = newColors.third.toInt()
-                brightness = newColors.third/255f
+                brightness.value = newColors.third/255f
             }
         )
         Box(
@@ -421,18 +419,19 @@ fun PowerButton(
     }
 }
 
+var brightness: MutableState<Float> = mutableStateOf(0f)
 @Composable
 fun BrightnessSlider(
     modifier: Modifier = Modifier,
-    light: Light,
-    brightness: Float
+    light: Light
 ) {
-
+    brightness.value = light.state!!.bri!!.toFloat()
 
     Slider(
-        value = brightness,
+        value = brightness.value,
         onValueChange = {
-            light.state!!.bri = brightness.toInt()
+            brightness.value = it
+            light.state!!.bri = brightness.value.toInt()
         },
         colors = SliderDefaults.colors(
             thumbColor = Color(0xFF462521),
