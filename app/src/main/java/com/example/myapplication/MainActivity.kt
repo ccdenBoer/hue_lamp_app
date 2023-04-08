@@ -305,7 +305,7 @@ class MainActivity : ComponentActivity() {
                     light.state!!.hue = newColors.first
                     light.state!!.sat = newColors.second.toInt()
                     light.state!!.bri = newColors.third.toInt()
-                    brightness.value = newColors.third / 255f
+                    brightness.value = newColors.third / 254f
                 }
             )
             Box(

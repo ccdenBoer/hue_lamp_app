@@ -33,9 +33,10 @@ class HueCommunication {
 
         val TAG = "HueCommunication"
         var bridge = ""
-        var ip = "10.0.2.2/api/"
+        var ip = "10.0.2.2:80/api/"
         var selectedLight = ""
         var lights: Map<String, Light> = emptyMap()
+        var testFinished = false
 
         fun makeBridgeConnection(username: String, callback: (() -> Unit)? = null) {
             val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
@@ -46,7 +47,9 @@ class HueCommunication {
         }
 
         fun setIP(newIP: String) {
-            ip = "$newIP/api/"
+            val regex = Regex("""^localhost:\d+|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$""")
+            if (regex.matches(newIP))
+                ip = "$newIP/api/"
         }
 
 /*        fun setIP(context: Context) {
@@ -55,16 +58,19 @@ class HueCommunication {
         }*/
 
         fun setEmIP(port: Int, emulator: Boolean) {
-            if (emulator) {
-                ip = "10.0.2.2:$port/api/"
-            } else {
-                ip = "localhost:$port/api/"
+            if (port in 1..65535) {
+                if (emulator) {
+                    setIP("10.0.2.2:$port")
+                } else {
+                    setIP("localhost:$port")
+                }
             }
-
         }
 
         fun selectLight(selectedLight: String) {
-            this.selectedLight = selectedLight
+            if (lights.containsKey(selectedLight)) {
+                this.selectedLight = selectedLight
+            }
         }
 
         fun requestLights(callback: (() -> Unit)? = null) {
@@ -72,43 +78,103 @@ class HueCommunication {
             makeRequest("/lights", "GET", "", "request lights", callback)
         }
 
-        fun turnLightOff() {
-            Log.d(TAG, "turning light off")
-            makeRequest("/lights/$selectedLight/state", "PUT", "{\"on\":false}", "light off")
-        }
-
-        fun turnLightOn() {
-            Log.d(TAG, "turning light on")
-            makeRequest("/lights/$selectedLight/state", "PUT", "{\"on\":true}", "light on")
-        }
-
-        fun setLightStatus(on: Boolean, saturation: Int, brightness: Int, hue: Int) {
-            Log.d(TAG, "setting light status")
-            if (on) {
+        fun turnLightOff(callback: (() -> Unit)? = null) {
+            if (lights.isNotEmpty()) {
+                Log.d(TAG, "turning light off")
+                lights[selectedLight]!!.state!!.on = false
                 makeRequest(
                     "/lights/$selectedLight/state",
                     "PUT",
-                    "{\"on\":true, \"sat\":$saturation, \"bri\":$brightness, \"hue\":$hue}",
-                    "light status"
-                )
-            } else {
-                makeRequest(
-                    "/lights/$selectedLight/state",
-                    "PUT",
-                    "{\"on\":false, \"sat\":$saturation, \"bri\":$brightness, \"hue\":$hue}",
-                    "light status"
+                    "{\"on\":false}",
+                    "light off",
+                    callback
                 )
             }
         }
 
-        fun setLightStatus(light: Light) {
+        fun turnLightOn(callback: (() -> Unit)? = null) {
+            Log.d(TAG, "turning light on")
+            if(lights.isNotEmpty()){
+                lights[selectedLight]!!.state!!.on = true
+                makeRequest(
+                    "/lights/$selectedLight/state",
+                    "PUT",
+                    "{\"on\":true}",
+                    "light on",
+                    callback
+                )
+            }
+
+        }
+
+        fun setLightStatus(
+            on: Boolean,
+            saturation: Int,
+            brightness: Int,
+            hue: Int,
+            callback: (() -> Unit)? = null
+        ) {
+            Log.d(TAG, "setting light status sat: $saturation, bri: $brightness, hue: $hue")
+            if(saturation !in 1..254 || brightness !in 1..254 || hue !in 0..65535){
+                return
+            }
+            val off = lights[selectedLight]!!.state!!.on
+            lights[selectedLight]!!.state!!.on = on
+            lights[selectedLight]!!.state!!.bri = brightness
+            lights[selectedLight]!!.state!!.sat = saturation
+            lights[selectedLight]!!.state!!.hue = hue
+            if(!off!!){
+                turnLightOn(){
+                    sleep(100)
+                    if (on) {
+                        makeRequest(
+                            "/lights/$selectedLight/state",
+                            "PUT",
+                            "{\"on\":true, \"sat\":$saturation, \"bri\":$brightness, \"hue\":$hue}",
+                            "light status",
+                            callback = callback
+                        )
+                    } else {
+                        makeRequest(
+                            "/lights/$selectedLight/state",
+                            "PUT",
+                            "{\"on\":true, \"sat\":$saturation, \"bri\":$brightness, \"hue\":$hue}",
+                            "light status",
+                            callback = callback
+                        )
+                        turnLightOff()
+                    }
+                }
+            } else {
+                if (on) {
+                    makeRequest(
+                        "/lights/$selectedLight/state",
+                        "PUT",
+                        "{\"on\":true, \"sat\":$saturation, \"bri\":$brightness, \"hue\":$hue}",
+                        "light status",
+                        callback = callback
+                    )
+                } else {
+                    makeRequest(
+                        "/lights/$selectedLight/state",
+                        "PUT",
+                        "{\"on\":true, \"sat\":$saturation, \"bri\":$brightness, \"hue\":$hue}",
+                        "light status",
+                        callback = callback
+                    )
+                    turnLightOff()
+                }
+            }
+        }
+
+        fun setLightStatus(light: Light, callback: (() -> Unit)? = null) {
             Log.d(TAG, "setting light status")
-            val objectMapper = ObjectMapper()
             setLightStatus(
                 light.state?.on!!,
                 light.state!!.sat!!,
                 light.state!!.bri!!,
-                light.state!!.hue!!
+                light.state!!.hue!!,
+                callback
             )
         }
 
@@ -126,6 +192,8 @@ class HueCommunication {
                         Log.d(TAG, urlString)
                         val url = URL(urlString)
                         val connection = url.openConnection() as HttpURLConnection
+                        connection.connectTimeout = 5000 // milliseconds
+                        connection.readTimeout = 5000 // milliseconds
                         connection.requestMethod = method
                         connection.setRequestProperty("Content-Type", "application/json")
                         connection.doOutput = true
@@ -138,7 +206,6 @@ class HueCommunication {
                         val responseCode = connection.responseCode
                         data = connection.inputStream.bufferedReader().readText()
                         Log.d(TAG, "Response: $data")
-                        SystemClock.sleep(100)
                     } catch (error: Exception) {
                         error.message?.let { Log.e(TAG, it) }
                     }
@@ -156,6 +223,7 @@ class HueCommunication {
                     if (callback != null) {
                         callback()
                     }
+                    testFinished = true
                 }
             }
 
@@ -174,7 +242,13 @@ class HueCommunication {
                     override fun run() {
                         val urlString = "http://$ip$bridge$command"
                         val url = URL(urlString)
+                        Log.d(
+                            TAG,
+                            "url: $urlString ip: $ip, bridge: $bridge, command: $command, method: $method, body: $body, tag: $tag"
+                        )
                         val connection = url.openConnection() as HttpURLConnection
+                        connection.connectTimeout = 5000 // milliseconds
+                        connection.readTimeout = 5000 // milliseconds
                         connection.requestMethod = method
 
                         if (body.isNotEmpty()) {
@@ -208,12 +282,17 @@ class HueCommunication {
                         if (callback != null) {
                             callback()
                         }
+                        testFinished = true
                     }
                 }
 
                 networkThread.start()
             } else {
                 Log.d(TAG, "No bridge yet!")
+                if (callback != null) {
+                    callback()
+                }
+                testFinished = true
             }
 
         }
