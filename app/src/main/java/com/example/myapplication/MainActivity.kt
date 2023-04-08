@@ -78,13 +78,12 @@ fun MyApp() {
         }
         composable(
             "settings/{connectionName}",
-            arguments = listOf(
-                navArgument("connectionName") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("connectionName") { type = NavType.StringType })
         ) { backStackEntry ->
-            val connectionName =
-                backStackEntry.arguments?.getString("connectionName") ?: ""
-            SettingsScreen(connectionName)
+            val connectionName = backStackEntry.arguments?.getString("connectionName") ?: ""
+            SettingsScreen(connectionName, onDisconnectClick = {
+                navController.navigateUp()
+            })
         }
     }
 }
@@ -142,7 +141,10 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
     }
 }
 @Composable
-fun SettingsScreen(connectionName: String) {
+fun SettingsScreen(
+    connectionName: String,
+    onDisconnectClick: () -> Unit
+) {
     var selectedColor by remember { mutableStateOf(Color.White) }
     Column(
         modifier = Modifier.fillMaxSize(),
@@ -187,6 +189,29 @@ fun SettingsScreen(connectionName: String) {
                 .padding(16.dp)
                 .background(selectedColor)
         )
+        Row(
+            horizontalArrangement = Arrangement.Center,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Button(
+                onClick = { /* Do nothing */ },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFFBDB246)
+                ),
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(text = "Apply")
+            }
+            Button(
+                onClick = onDisconnectClick,
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Color(0xFFCA2E55)
+                ),
+                modifier = Modifier.padding(16.dp)
+            ) {
+                Text(text = "Disconnect")
+            }
+        }
     }
 }
 
