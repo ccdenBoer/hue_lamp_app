@@ -15,11 +15,14 @@ import androidx.compose.material.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -43,6 +46,7 @@ import java.net.HttpURLConnection
 import java.net.URL
 
 
+import com.github.skydoves.colorpicker.compose.*
 class MainActivity : ComponentActivity() {
     val TAG = "MainActivity"
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -139,13 +143,12 @@ fun MyApp() {
         }
         composable(
             "settings/{connectionName}",
-            arguments = listOf(
-                navArgument("connectionName") { type = NavType.StringType }
-            )
+            arguments = listOf(navArgument("connectionName") { type = NavType.StringType })
         ) { backStackEntry ->
-            val connectionName =
-                backStackEntry.arguments?.getString("connectionName") ?: ""
-            SettingsScreen(connectionName)
+            val connectionName = backStackEntry.arguments?.getString("connectionName") ?: ""
+            SettingsScreen(connectionName, onClick = {
+                navController.navigateUp()
+            })
         }
     }
 }
@@ -204,66 +207,189 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
 }
 
 @Composable
-fun SettingsScreen(connectionName: String) {
+fun SettingsScreen(
+    connectionName: String,
+    onClick: () -> Unit,
+) {
+    var selectedColor by remember { mutableStateOf(Color.White) }
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
         Text(
             text = "Settings for $connectionName",
-            style = MaterialTheme.typography.h5
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier.padding(4.dp)
         )
-        DetailInfoTextField()
-        PowerSwitch()
-        BrightnessSlider()
-    }
-}
+        DetailInfoTextField(
+            modelId = "123456",
+            uniqueId = "ABCDEF",
+            swversion = "1.0.0",
+            modifier = Modifier.padding(4.dp)
+        )
+        Text(
+            text = "Power",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(4.dp)
+        )
+        PowerButton(
+            modifier = Modifier.padding(4.dp)
+        )
 
-@Composable
-fun DetailInfoTextField() {
-    TextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        value = "",
-        onValueChange = { }
-    )
-}
-
-@Composable
-fun PowerSwitch() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Text(text = "Power:")
-        Button(
-            onClick = { /* Handle power switch click */ },
-            modifier = Modifier.padding(start = 8.dp),
-            content = {
-
+        Text(
+            text = "Brightness",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(4.dp)
+        )
+        BrightnessSlider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp)
+        )
+        Text(
+            text = "Color",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(4.dp)
+        )
+        ColorPicker(onColorSelected = { color ->
+            selectedColor = color
+        })
+        Box(
+            modifier = Modifier
+                .size(64.dp)
+                .padding(8.dp)
+                .background(selectedColor)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
+        ) {
+            Button(
+                onClick = { /*TODO */},
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Apply")
             }
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Disconnect")
+            }
+        }
+    }
+}
+
+@Composable
+fun DetailInfoTextField(
+    modelId: String,
+    uniqueId: String,
+    swversion: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        Row {
+            Text(
+                text = "model id = ",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = modelId,
+                style = MaterialTheme.typography.body2
+            )
+        }
+        Row {
+            Text(
+                text = "unique id = ",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = uniqueId,
+                style = MaterialTheme.typography.body2
+            )
+        }
+        Row {
+            Text(
+                text = "swversion = ",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = swversion,
+                style = MaterialTheme.typography.body2
+            )
+        }
+    }
+}
+
+@Composable
+fun PowerButton(
+    modifier: Modifier = Modifier
+) {
+    var isOn by remember { mutableStateOf(false) }
+
+    Button(
+        onClick = { isOn = !isOn },
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = if (isOn) Color(0xFFBDB246) else Color(0xFFCA2E55)
+        ),
+        modifier = modifier
+    ) {
+        Text(
+            text = if (isOn) "On" else "Off",
+            style = MaterialTheme.typography.button
         )
     }
 }
 
 @Composable
-fun BrightnessSlider() {
+fun BrightnessSlider(
+    modifier: Modifier = Modifier
+) {
+    var brightness by remember { mutableStateOf(0f) }
+
     Slider(
-        value = 0f,
-        onValueChange = { /* Handle brightness change */ },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+        value = brightness,
+        onValueChange = { brightness = it },
+        colors = SliderDefaults.colors(
+            thumbColor = Color(0xFF462521),
+            activeTrackColor = Color(0xFF8A6552)
+        ),
+        modifier = modifier
     )
 }
 
-
-@Preview
 @Composable
-fun SettingsScreenPreview() {
-    Surface {
-        SettingsScreen(connectionName = "lamp 1")
+fun ColorPicker(
+    onColorSelected: (Color) -> Unit
+) {
+    val colors = listOf(
+        Color(0xFFFF0000), // red
+        Color(0xFFFFA500), // orange
+        Color(0xFFFFFF00), // yellow
+        Color(0xFF008000), // green
+        Color(0xFF0000FF), // blue
+        Color(0xFF4B0082), // indigo
+        Color(0xFF9400D3)  // violet
+    )
+
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        items(colors.size) { index ->
+            Box(
+                modifier = Modifier
+                    .size(48.dp)
+                    .clip(CircleShape)
+                    .background(colors[index])
+                    .clickable {
+                        onColorSelected(colors[index])
+                    }
+            )
+        }
     }
 }
