@@ -3,10 +3,16 @@ package com.example.myapplication
 import android.content.Context
 import android.net.wifi.WifiManager
 import android.os.AsyncTask
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock
 import android.os.SystemClock.sleep
+import android.renderscript.Script.InvokeID
 import android.text.format.Formatter
 import android.util.Log
+import android.util.MutableBoolean
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContentProviderCompat.requireContext
 import com.example.myapplication.HueCommunication.Companion.selectedLight
 import com.example.myapplication.data.Light
@@ -30,11 +36,12 @@ class HueCommunication {
         var selectedLight = ""
         var latesResponse: String? = null
         var lights: Map<String, Light> = emptyMap()
+        var connected: MutableState<Boolean> = mutableStateOf(false)
 
-        fun makeBridgeConnection(username: String) {
+        fun makeBridgeConnection(username: String, callback: (() -> Unit)? = null) {
             val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
             val method = "GET"
-            HueBridgeTask().execute(ip, message, method)
+            makeBridgeRequest(message, method, callback)
             Log.d(TAG, "Making bridge")
 
         }
@@ -61,9 +68,9 @@ class HueCommunication {
             this.selectedLight = selectedLight
         }
 
-        fun requestLights() {
+        fun requestLights(callback: (() -> Unit)? = null) {
             Log.d(TAG, "Requesting lights")
-            makeRequest("/lights", "GET", "", "request lights")
+            makeRequest("/lights", "GET", "", "request lights", callback)
 
 
         }
@@ -105,14 +112,76 @@ class HueCommunication {
         fun setLightStatus(light: Light) {
             Log.d(TAG, "setting light status")
             val objectMapper = ObjectMapper()
-            setLightStatus(light.state?.on!!, light.state!!.sat!!, light.state!!.bri!!, light.state!!.hue!!)
+            setLightStatus(
+                light.state?.on!!,
+                light.state!!.sat!!,
+                light.state!!.bri!!,
+                light.state!!.hue!!
+            )
+        }
+
+        private fun makeBridgeRequest(
+            message: String,
+            method: String,
+            callback: (() -> Unit)? = null
+        ) {
+            val networkThread = object : Thread() {
+                override fun run()
+                {
+                    var data = "error"
+                    Log.d(TAG, "Staring new request")
+                    while (data.contains("error")) {
+                        try {
+                            val urlString = "http://" + ip
+                            Log.d(TAG, urlString)
+                            val url = URL(urlString)
+                            val connection = url.openConnection() as HttpURLConnection
+                            connection.requestMethod = method
+                            connection.setRequestProperty("Content-Type", "application/json")
+                            connection.doOutput = true
+                            val payload = message
+                            val writer = OutputStreamWriter(connection.outputStream)
+                            writer.write(payload)
+                            writer.flush()
+                            writer.close()
+
+                            val responseCode = connection.responseCode
+                            data = connection.inputStream.bufferedReader().readText()
+                            Log.d(TAG, "Response: " + data)
+                            SystemClock.sleep(100)
+                        } catch (error: Exception) {
+                            error.message?.let { Log.e(TAG, it) }
+                        }
+                    }
+
+                    val arr = JSONArray(data)
+                    val jObj: JSONObject = arr.getJSONObject(0)
+                    bridge = jObj.getJSONObject("success").getString("username")
+
+                    if (data != null) {
+                        if (data.contains("username")) {
+                            val arr = JSONArray(data)
+                            val jObj: JSONObject = arr.getJSONObject(0)
+                            bridge = jObj.getJSONObject("success").getString("username")
+                            Log.d(TAG, bridge)
+                            if (callback != null) {
+                                callback()
+                            }
+                        }
+                    }
+
+                    latesResponse = data
+                }
+            }
+            networkThread.start()
         }
 
         private fun makeRequest(
             command: String,
             method: String,
             body: String,
-            tag: String
+            tag: String,
+            callback: (() -> Unit)? = null
         ) {
             if (bridge.isNotEmpty()) {
                 val networkThread = object : Thread() {
@@ -147,8 +216,13 @@ class HueCommunication {
                                         response.toString(),
                                         object : TypeReference<Map<String, Light>>() {})
                                     selectLight(lights.keys.first())
+                                    connected.value = true
                                 }
 
+                            }
+
+                            if(callback != null){
+                                callback()
                             }
                         } else {
                             println("GET request failed with response code $responseCode")
@@ -164,61 +238,6 @@ class HueCommunication {
         }
 
 
-        class HueBridgeTask : AsyncTask<String, Void, String>() {
-
-            override fun doInBackground(vararg params: String?): String {
-                var data = "error"
-                Log.d(TAG, "Staring new request")
-                while (data.contains("error")) {
-                    try {
-
-
-                        val urlString = "http://" + params[0]
-                        Log.d(TAG, urlString)
-                        val url = URL(urlString)
-                        val connection = url.openConnection() as HttpURLConnection
-                        connection.requestMethod = params[2]
-                        connection.setRequestProperty("Content-Type", "application/json")
-                        connection.doOutput = true
-                        val payload = params[1]
-                        val writer = OutputStreamWriter(connection.outputStream)
-                        writer.write(payload)
-                        writer.flush()
-                        writer.close()
-
-                        val responseCode = connection.responseCode
-                        data = connection.inputStream.bufferedReader().readText()
-                        Log.d(TAG, "Response: " + data)
-                        SystemClock.sleep(100)
-                    } catch (error: Exception) {
-                        error.message?.let { Log.e(TAG, it) }
-                    }
-                }
-                val arr = JSONArray(data)
-                val jObj: JSONObject = arr.getJSONObject(0)
-                bridge = jObj.getJSONObject("success").getString("username")
-                return data
-            }
-
-            override fun onPostExecute(result: String?) {
-                super.onPostExecute(result)
-                Log.d(TAG, "onpostexecute")
-                if (result != null) {
-                    Log.d(TAG, result)
-                }
-
-                if (result != null) {
-                    if (result.contains("username")) {
-                        val arr = JSONArray(result)
-                        val jObj: JSONObject = arr.getJSONObject(0)
-                        bridge = jObj.getJSONObject("success").getString("username")
-                        Log.d(TAG, bridge)
-                    }
-                }
-
-                latesResponse = result
-            }
-        }
     }
 }
 

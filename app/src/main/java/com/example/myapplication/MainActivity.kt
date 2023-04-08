@@ -2,6 +2,8 @@ package com.example.myapplication
 
 import android.os.AsyncTask
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.os.SystemClock.sleep
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -24,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.dp
@@ -33,10 +36,12 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.example.myapplication.data.Light
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.philips.lighting.hue.sdk.*
 import com.philips.lighting.hue.sdk.exception.*
 import com.philips.lighting.hue.sdk.utilities.*
+import androidx.core.graphics.ColorUtils
 import com.philips.lighting.model.PHBridge
 import com.philips.lighting.model.PHHueParsingError
 import org.json.JSONArray
@@ -45,10 +50,10 @@ import java.io.OutputStreamWriter
 import java.net.HttpURLConnection
 import java.net.URL
 
+val TAG = "MainActivity"
 
-import com.github.skydoves.colorpicker.compose.*
 class MainActivity : ComponentActivity() {
-    val TAG = "MainActivity"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -80,15 +85,13 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        test()
+        //test()
 
     }
 
 
     fun test() {
-        HueCommunication.makeBridgeConnection("newuser")
 
-        Log.d(TAG, "waiting for bridge")
 
         while (HueCommunication.bridge.equals(""))
             sleep(10)
@@ -128,16 +131,33 @@ class MainActivity : ComponentActivity() {
 fun MyApp() {
     val navController = rememberNavController()
 
-    NavHost(navController, startDestination = "connectionList") {
+    NavHost(navController, startDestination = "connect") {
+        composable("connect") {
+            HueLampConnect(
+                onClick = {
+                    HueCommunication.makeBridgeConnection("newuser") {
+                        HueCommunication.requestLights() {
+                            val handler = Handler(Looper.getMainLooper())
+
+                            handler.post {
+                                if (HueCommunication.lights.isNotEmpty()) {
+                                    navController.navigate("connectionList")
+                                } else {
+                                    Log.d(TAG, "No lights")
+                                }
+                            }
+                        }
+
+
+                    }
+                }
+            )
+        }
         composable("connectionList") {
             HueLampConnections(
-                connections = listOf(
-                    "lamp 1",
-                    "lamp 2",
-                    "lamp 3"
-                ),
+                connections = HueCommunication.lights,
                 onConnectionClick = {
-                    navController.navigate("settings/$it")
+                    navController.navigate("settings/${it.name}")
                 }
             )
         }
@@ -154,9 +174,39 @@ fun MyApp() {
 }
 
 @Composable
+fun HueLampConnect(onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp)
+            .background(Color(0xFF8A6552))
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.CenterStart
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier
+                .padding(16.dp)
+        ) {
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            ) {
+                Text(
+                    text = "Connect on ${HueCommunication.ip}",
+                    style = MaterialTheme.typography.button.copy(color = Color(0xFF462521))
+                )
+            }
+        }
+    }
+}
+
+@Composable
 fun HueLampConnections(
-    connections: List<String>,
-    onConnectionClick: (String) -> Unit
+    connections: Map<String, Light>,
+    onConnectionClick: (Light) -> Unit
 ) {
     Column(
         modifier = Modifier
@@ -164,9 +214,13 @@ fun HueLampConnections(
             .padding(top = 10.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
     ) {
         connections.forEach { connection ->
-            ConnectionItem(name = connection, onClick = {
-                onConnectionClick(connection)
-            })
+            Log.d(TAG, "Found 1 connection: ${connection.value.name}")
+            connection.value.name?.let {
+                ConnectionItem(name = it, onClick = {
+                    HueCommunication.selectLight(connection.key)
+                    onConnectionClick(connection.value)
+                })
+            }
         }
     }
 }
@@ -212,6 +266,8 @@ fun SettingsScreen(
     onClick: () -> Unit,
 ) {
     var selectedColor by remember { mutableStateOf(Color.White) }
+    var light = HueCommunication.lights[HueCommunication.selectedLight]
+    var brightness by remember { mutableStateOf(0f) }
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -223,10 +279,10 @@ fun SettingsScreen(
             modifier = Modifier.padding(4.dp)
         )
         DetailInfoTextField(
-            modelId = "123456",
-            uniqueId = "ABCDEF",
-            swversion = "1.0.0",
-            modifier = Modifier.padding(4.dp)
+            modelId = light?.modelid!!,
+            uniqueId = light?.uniqueid!!,
+            swversion = light?.swversion!!,
+            modifier = Modifier?.padding(4.dp)
         )
         Text(
             text = "Power",
@@ -234,7 +290,8 @@ fun SettingsScreen(
             modifier = Modifier.padding(4.dp)
         )
         PowerButton(
-            modifier = Modifier.padding(4.dp)
+            modifier = Modifier.padding(4.dp),
+            light = light
         )
 
         Text(
@@ -245,16 +302,25 @@ fun SettingsScreen(
         BrightnessSlider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 4.dp)
+                .padding(horizontal = 4.dp),
+            light = light,
+            brightness = brightness
         )
         Text(
             text = "Color",
             style = MaterialTheme.typography.h6,
             modifier = Modifier.padding(4.dp)
         )
-        ColorPicker(onColorSelected = { color ->
-            selectedColor = color
-        })
+        ColorPicker(
+            onColorSelected = { color ->
+                selectedColor = color
+                val newColors = colorToHue(color)
+                light.state!!.hue = newColors.first
+                light.state!!.sat = newColors.second.toInt()
+                light.state!!.bri = newColors.third.toInt()
+                brightness = newColors.third/255f
+            }
+        )
         Box(
             modifier = Modifier
                 .size(64.dp)
@@ -267,7 +333,7 @@ fun SettingsScreen(
                 .padding(8.dp)
         ) {
             Button(
-                onClick = { /*TODO */},
+                onClick = { HueCommunication.setLightStatus(light) },
                 colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
                 modifier = Modifier.fillMaxWidth()
             ) {
@@ -327,12 +393,22 @@ fun DetailInfoTextField(
 
 @Composable
 fun PowerButton(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    light: Light
 ) {
-    var isOn by remember { mutableStateOf(false) }
+    var isOn by remember { mutableStateOf(light!!.state!!.on!!) }
 
     Button(
-        onClick = { isOn = !isOn },
+        onClick = {
+            isOn = !isOn
+            if (isOn) {
+                light.state!!.on = true
+                HueCommunication.turnLightOn()
+            } else {
+                light.state!!.on = false
+                HueCommunication.turnLightOff()
+            }
+        },
         colors = ButtonDefaults.buttonColors(
             backgroundColor = if (isOn) Color(0xFFBDB246) else Color(0xFFCA2E55)
         ),
@@ -347,18 +423,23 @@ fun PowerButton(
 
 @Composable
 fun BrightnessSlider(
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    light: Light,
+    brightness: Float
 ) {
-    var brightness by remember { mutableStateOf(0f) }
+
 
     Slider(
         value = brightness,
-        onValueChange = { brightness = it },
+        onValueChange = {
+            light.state!!.bri = brightness.toInt()
+        },
         colors = SliderDefaults.colors(
             thumbColor = Color(0xFF462521),
             activeTrackColor = Color(0xFF8A6552)
         ),
-        modifier = modifier
+        modifier = modifier,
+        valueRange = 1f..254f
     )
 }
 
@@ -393,3 +474,15 @@ fun ColorPicker(
         }
     }
 }
+
+
+
+fun colorToHue(color: Color): Triple<Int, Short, Short> {
+    val hsb = FloatArray(3)
+    ColorUtils.colorToHSL(color.toArgb(), hsb)
+    val hueInt = (hsb[0] / 360 * 65535).toInt() // Convert hue to 16-bit integer
+    val saturationShort = (hsb[1] * 255).toInt().toShort() // Convert saturation to 8-bit integer
+    val brightnessShort = (hsb[2] * 255).toInt().toShort() // Convert brightness to 8-bit integer
+    return Triple(hueInt, saturationShort, brightnessShort)
+}
+
