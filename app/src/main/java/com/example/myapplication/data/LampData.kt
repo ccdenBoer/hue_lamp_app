@@ -1,5 +1,11 @@
 package com.example.myapplication.data
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.core.graphics.ColorUtils
+import com.fasterxml.jackson.core.type.TypeReference
+import com.fasterxml.jackson.databind.ObjectMapper
+
 data class Light(
     var state: State? = null,
     var swupdate: Swupdate? = null,
@@ -65,3 +71,4 @@ data class Config(
     var function: String? = null,
     var direction: String? = null
 )
+

@@ -11,7 +11,11 @@ import org.junit.Assert.*
  */
 class ExampleUnitTest {
     @Test
-    fun addition_isCorrect() {
+    fun ConvertingJson_Works() {
+        assertEquals(4, 2 + 2)
+    }
+    @Test
+    fun ConvertingColor_Works() {
         assertEquals(4, 2 + 2)
     }
 }

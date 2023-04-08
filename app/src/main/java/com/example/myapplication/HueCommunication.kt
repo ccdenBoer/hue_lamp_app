@@ -16,6 +16,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.core.content.ContentProviderCompat.requireContext
 import com.example.myapplication.HueCommunication.Companion.selectedLight
 import com.example.myapplication.data.Light
+import com.example.myapplication.data.lightsJSONToData
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import org.json.JSONArray
@@ -34,9 +35,7 @@ class HueCommunication {
         var bridge = ""
         var ip = "10.0.2.2/api/"
         var selectedLight = ""
-        var latesResponse: String? = null
         var lights: Map<String, Light> = emptyMap()
-        var connected: MutableState<Boolean> = mutableStateOf(false)
 
         fun makeBridgeConnection(username: String, callback: (() -> Unit)? = null) {
             val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
@@ -50,10 +49,10 @@ class HueCommunication {
             ip = "$newIP/api/"
         }
 
-        fun setIP(context: Context) {
+/*        fun setIP(context: Context) {
             val wm = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
             setIP(Formatter.formatIpAddress(wm.connectionInfo.ipAddress))
-        }
+        }*/
 
         fun setEmIP(port: Int, emulator: Boolean) {
             if (emulator) {
@@ -71,13 +70,6 @@ class HueCommunication {
         fun requestLights(callback: (() -> Unit)? = null) {
             Log.d(TAG, "Requesting lights")
             makeRequest("/lights", "GET", "", "request lights", callback)
-
-
-        }
-
-        fun searchLights() {
-            Log.d(TAG, "searching for lights")
-            makeRequest("/lights", "POST", "{}", "search")
         }
 
         fun turnLightOff() {
@@ -126,53 +118,47 @@ class HueCommunication {
             callback: (() -> Unit)? = null
         ) {
             val networkThread = object : Thread() {
-                override fun run()
-                {
-                    var data = "error"
+                override fun run() {
+                    var data = ""
                     Log.d(TAG, "Staring new request")
-                    while (data.contains("error")) {
-                        try {
-                            val urlString = "http://" + ip
-                            Log.d(TAG, urlString)
-                            val url = URL(urlString)
-                            val connection = url.openConnection() as HttpURLConnection
-                            connection.requestMethod = method
-                            connection.setRequestProperty("Content-Type", "application/json")
-                            connection.doOutput = true
-                            val payload = message
-                            val writer = OutputStreamWriter(connection.outputStream)
-                            writer.write(payload)
-                            writer.flush()
-                            writer.close()
+                    try {
+                        val urlString = "http://$ip"
+                        Log.d(TAG, urlString)
+                        val url = URL(urlString)
+                        val connection = url.openConnection() as HttpURLConnection
+                        connection.requestMethod = method
+                        connection.setRequestProperty("Content-Type", "application/json")
+                        connection.doOutput = true
+                        val payload = message
+                        val writer = OutputStreamWriter(connection.outputStream)
+                        writer.write(payload)
+                        writer.flush()
+                        writer.close()
 
-                            val responseCode = connection.responseCode
-                            data = connection.inputStream.bufferedReader().readText()
-                            Log.d(TAG, "Response: " + data)
-                            SystemClock.sleep(100)
-                        } catch (error: Exception) {
-                            error.message?.let { Log.e(TAG, it) }
-                        }
+                        val responseCode = connection.responseCode
+                        data = connection.inputStream.bufferedReader().readText()
+                        Log.d(TAG, "Response: $data")
+                        SystemClock.sleep(100)
+                    } catch (error: Exception) {
+                        error.message?.let { Log.e(TAG, it) }
                     }
-
-                    val arr = JSONArray(data)
-                    val jObj: JSONObject = arr.getJSONObject(0)
-                    bridge = jObj.getJSONObject("success").getString("username")
 
                     if (data != null) {
                         if (data.contains("username")) {
+
                             val arr = JSONArray(data)
                             val jObj: JSONObject = arr.getJSONObject(0)
                             bridge = jObj.getJSONObject("success").getString("username")
                             Log.d(TAG, bridge)
-                            if (callback != null) {
-                                callback()
-                            }
+
                         }
                     }
-
-                    latesResponse = data
+                    if (callback != null) {
+                        callback()
+                    }
                 }
             }
+
             networkThread.start()
         }
 
@@ -209,23 +195,18 @@ class HueCommunication {
                             }
                             inputStream.close()
                             Log.d("$TAG : $tag", response.toString())
-                            val mapper = ObjectMapper()
                             when (tag) {
                                 "request lights" -> {
-                                    lights = mapper.readValue(
-                                        response.toString(),
-                                        object : TypeReference<Map<String, Light>>() {})
+                                    lights = lightsJSONToData(response.toString())
                                     selectLight(lights.keys.first())
-                                    connected.value = true
                                 }
-
                             }
 
-                            if(callback != null){
-                                callback()
-                            }
                         } else {
                             println("GET request failed with response code $responseCode")
+                        }
+                        if (callback != null) {
+                            callback()
                         }
                     }
                 }
@@ -236,8 +217,6 @@ class HueCommunication {
             }
 
         }
-
-
     }
 }
 
