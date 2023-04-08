@@ -25,7 +25,6 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import com.github.skydoves.colorpicker.compose.*
-
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -145,19 +144,40 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
 @Composable
 fun SettingsScreen(connectionName: String) {
     var selectedColor by remember { mutableStateOf(Color.White) }
-
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
         Text(
             text = "Settings for $connectionName",
-            style = MaterialTheme.typography.h5
+            style = MaterialTheme.typography.h5,
+            modifier = Modifier.padding(16.dp)
         )
-        DetailInfoTextField()
-        PowerSwitch()
-        BrightnessSlider()
+        DetailInfoTextField(
+            modelId = "123456",
+            uniqueId = "ABCDEF",
+            swversion = "1.0.0",
+            modifier = Modifier.padding(16.dp)
+        )
+        PowerButton(
+            modifier = Modifier.padding(16.dp)
+        )
+        Text(
+            text = "Brightness",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(16.dp)
+        )
+        BrightnessSlider(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp)
+        )
+        Text(
+            text = "Color",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(16.dp)
+        )
         ColorPicker(onColorSelected = { color ->
             selectedColor = color
         })
@@ -171,52 +191,77 @@ fun SettingsScreen(connectionName: String) {
 }
 
 @Composable
-fun DetailInfoTextField() {
-    TextField(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        value = "",
-        onValueChange = { }
-    )
+fun DetailInfoTextField(
+    modelId: String,
+    uniqueId: String,
+    swversion: String,
+    modifier: Modifier = Modifier
+) {
+    Column(modifier) {
+        Row {
+            Text(
+                text = "model id = ",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = modelId,
+                style = MaterialTheme.typography.body2
+            )
+        }
+        Row {
+            Text(
+                text = "unique id = ",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = uniqueId,
+                style = MaterialTheme.typography.body2
+            )
+        }
+        Row {
+            Text(
+                text = "swversion = ",
+                style = MaterialTheme.typography.body1
+            )
+            Text(
+                text = swversion,
+                style = MaterialTheme.typography.body2
+            )
+        }
+    }
 }
 
 @Composable
-fun PowerSwitch() {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(16.dp)
-    ) {
-        Text(text = "Power:")
-        Button(
-            onClick = { /* Handle power switch click */ },
-            modifier = Modifier.padding(start = 8.dp),
-            content = {
+fun PowerButton(
+    modifier: Modifier = Modifier
+) {
+    var isOn by remember { mutableStateOf(false) }
 
-            }
+    Button(
+        onClick = { isOn = !isOn },
+        colors = ButtonDefaults.buttonColors(
+            backgroundColor = if (isOn) Color(0xFFBDB246) else Color(0xFFCA2E55)
+        ),
+        modifier = modifier
+    ) {
+        Text(
+            text = if (isOn) "On" else "Off",
+            style = MaterialTheme.typography.button
         )
     }
 }
 
 @Composable
-fun BrightnessSlider() {
+fun BrightnessSlider(
+    modifier: Modifier = Modifier
+) {
+    var brightness by remember { mutableStateOf(0f) }
+
     Slider(
-        value = 0f,
-        onValueChange = { /* Handle brightness change */ },
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(16.dp)
+        value = brightness,
+        onValueChange = { brightness = it },
+        modifier = modifier
     )
-}
-
-
-
-@Preview
-@Composable
-fun SettingsScreenPreview() {
-    Surface {
-        SettingsScreen(connectionName = "lamp 1")
-    }
 }
 
 @Composable
