@@ -65,4 +65,13 @@ dependencies {
     androidTestImplementation "androidx.compose.ui:ui-test-junit4:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-tooling:$compose_ui_version"
     debugImplementation "androidx.compose.ui:ui-test-manifest:$compose_ui_version"
+
+    implementation files('libs/huelocalsdk.jar')
+    implementation files('libs/huesdkresources.jar')
+    implementation files('libs/tablelayout.jar')
+
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: '2.13.2.2'
+
+    //implementation 'com.philips.lighting:hue-sdk:3.1.0'
+
 }
