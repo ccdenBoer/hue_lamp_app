@@ -81,7 +81,7 @@ fun MyApp() {
             arguments = listOf(navArgument("connectionName") { type = NavType.StringType })
         ) { backStackEntry ->
             val connectionName = backStackEntry.arguments?.getString("connectionName") ?: ""
-            SettingsScreen(connectionName, onDisconnectClick = {
+            SettingsScreen(connectionName, onClick = {
                 navController.navigateUp()
             })
         }
@@ -143,7 +143,7 @@ fun ConnectionItem(name: String, onClick: () -> Unit) {
 @Composable
 fun SettingsScreen(
     connectionName: String,
-    onDisconnectClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     var selectedColor by remember { mutableStateOf(Color.White) }
     Column(
@@ -154,31 +154,37 @@ fun SettingsScreen(
         Text(
             text = "Settings for $connectionName",
             style = MaterialTheme.typography.h5,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(4.dp)
         )
         DetailInfoTextField(
             modelId = "123456",
             uniqueId = "ABCDEF",
             swversion = "1.0.0",
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(4.dp)
+        )
+        Text(
+            text = "Power",
+            style = MaterialTheme.typography.h6,
+            modifier = Modifier.padding(4.dp)
         )
         PowerButton(
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(4.dp)
         )
+
         Text(
             text = "Brightness",
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(4.dp)
         )
         BrightnessSlider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 4.dp)
         )
         Text(
             text = "Color",
             style = MaterialTheme.typography.h6,
-            modifier = Modifier.padding(16.dp)
+            modifier = Modifier.padding(4.dp)
         )
         ColorPicker(onColorSelected = { color ->
             selectedColor = color
@@ -186,28 +192,25 @@ fun SettingsScreen(
         Box(
             modifier = Modifier
                 .size(64.dp)
-                .padding(16.dp)
+                .padding(8.dp)
                 .background(selectedColor)
         )
-        Row(
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier.fillMaxWidth()
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(8.dp)
         ) {
             Button(
-                onClick = { /* Do nothing */ },
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFFBDB246)
-                ),
-                modifier = Modifier.padding(16.dp)
+                onClick = { /*TODO */},
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Apply")
             }
             Button(
-                onClick = onDisconnectClick,
-                colors = ButtonDefaults.buttonColors(
-                    backgroundColor = Color(0xFFCA2E55)
-                ),
-                modifier = Modifier.padding(16.dp)
+                onClick = onClick,
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                modifier = Modifier.fillMaxWidth()
             ) {
                 Text(text = "Disconnect")
             }
@@ -285,6 +288,10 @@ fun BrightnessSlider(
     Slider(
         value = brightness,
         onValueChange = { brightness = it },
+        colors = SliderDefaults.colors(
+            thumbColor = Color(0xFF462521),
+            activeTrackColor = Color(0xFF8A6552)
+        ),
         modifier = modifier
     )
 }
