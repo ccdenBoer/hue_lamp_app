@@ -65,7 +65,6 @@ class MainActivity : ComponentActivity() {
     var hasBridge: MutableState<Boolean> = mutableStateOf(false)
     var hasLights: MutableState<Boolean> = mutableStateOf(false)
     var isLoading: MutableState<Boolean> = mutableStateOf(false)
-    var isLoadingBridge: MutableState<Boolean> = mutableStateOf(false)
     var standardIpAddress = "10.0.2.2"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -113,7 +112,11 @@ class MainActivity : ComponentActivity() {
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Text(text = "Welcome to Hue Connect", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text(
+                        text = "Welcome to Hue Connect",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
                     Spacer(modifier = Modifier.height(16.dp))
                     var ipAddress by remember { mutableStateOf(standardIpAddress) }
                     OutlinedTextField(
@@ -130,7 +133,6 @@ class MainActivity : ComponentActivity() {
                         onClick = {
                             HueCommunication.setIP(ipAddress)
                             isLoading.value = true
-                            isLoadingBridge.value = true
                             HueCommunication.makeBridgeConnection("newuser") {
                                 val handler = Handler(Looper.getMainLooper())
                                 if (HueCommunication.bridge.isNotEmpty()) {
@@ -150,7 +152,6 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
-                            isLoadingBridge.value = false
 
                         },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
@@ -159,99 +160,15 @@ class MainActivity : ComponentActivity() {
                         Text(text = "Connect")
                     }
                     if (isLoading.value) {
-                        if(isLoadingBridge.value) {
-                            AlertDialog(
-                                onDismissRequest = { },
-                                buttons = {
-                                    Button(
-                                        onClick = { isLoading.value = false },
-                                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(text = "Cancel")
-                                    }
-                                },
-                                title = {
-                                    Text(
-                                        text = "Loading...",
-                                        color = Color(0xFF462521),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                    Text(
-                                        text = "Creating bridge",
-                                        color = Color(0xFF462521),
-                                        fontWeight = FontWeight.Bold,
-                                        fontSize = 20.sp,
-                                        textAlign = TextAlign.Center,
-                                        modifier = Modifier.fillMaxWidth()
-                                    )
-                                },
-                                text = {
-                                    Box(
-                                        contentAlignment = Alignment.Center,
-                                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                                    ) {
-                                        CircularProgressIndicator(
-                                            color = Color(0xFF462521),
-                                            modifier = Modifier.size(48.dp)
-                                        )
-                                    }
-                                },
-                                backgroundColor = Color(0xFFFFE0B5),
-                                contentColor = Color.White
-                            )
-                        }
-                        } else {
-                        AlertDialog(
-                            onDismissRequest = { },
-                            buttons = {
-                                Button(
-                                    onClick = { isLoading.value = false },
-                                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
-                                    modifier = Modifier.fillMaxWidth()
-                                ) {
-                                    Text(text = "Cancel")
-                                }
-                            },
-                            title = {
-                                Text(
-                                    text = "Loading...",
-                                    color = Color(0xFF462521),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                Text(
-                                    text = "Made bridge, searching for lights",
-                                    color = Color(0xFF462521),
-                                    fontWeight = FontWeight.Bold,
-                                    fontSize = 20.sp,
-                                    textAlign = TextAlign.Center,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            },
-                            text = {
-                                Box(
-                                    contentAlignment = Alignment.Center,
-                                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                                ) {
-                                    CircularProgressIndicator(
-                                        color = Color(0xFF462521),
-                                        modifier = Modifier.size(48.dp)
-                                    )
-                                }
-                            },
-                            backgroundColor = Color(0xFFFFE0B5),
-                            contentColor = Color.White
-                        )
-                        }
+                        if (!hasBridge.value && !hasLights.value)
+                            loadingScreen(message = "Creating bridge, make sure it's on linking mode ")
+                        if (hasBridge.value && !hasLights.value)
+                            loadingScreen(message = "Created bridge, searching for lights")
+                        if (hasBridge.value && hasLights.value)
+                            loadingScreen(message = "Created bridge, found lights")
 
 
-                }
+                    }
 
 //                HueLampConnect(
 //                    onClick = {
@@ -278,6 +195,7 @@ class MainActivity : ComponentActivity() {
 //                        }
 //                    }
 //                )
+                }
             }
             composable("connectionList") {
                 HueLampConnections(
@@ -301,56 +219,110 @@ class MainActivity : ComponentActivity() {
                 })
             }
         }
-    }
 
-    @Composable
-    fun HueLampConnect(onClick: () -> Unit) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .background(Color(0xFF8A6552))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+        @Composable
+        fun HueLampConnect(onClick: () -> Unit) {
+            Box(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(Color(0xFF8A6552))
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.CenterStart
             ) {
-                if(hasBridge.value && hasLights.value){
-                    Text(
-                        text = "Made bridge with lights",
-                        style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
-                    )
-                }
-                if(!hasBridge.value && !hasLights.value){
-                    Text(
-                        text = "No bridge, press link button",
-                        style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
-                    )
-                }
-                if(hasBridge.value && !hasLights.value){
-                    Text(
-                        text = "Made bridge, searching for lights",
-                        style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = onClick,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(16.dp)
                 ) {
-                    Text(
-                        text = "Connect on ${HueCommunication.ip}",
-                        style = MaterialTheme.typography.button.copy(color = Color(0xFF462521))
-                    )
+                    if (hasBridge.value && hasLights.value) {
+                        Text(
+                            text = "Made bridge with lights",
+                            style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
+                        )
+                    }
+                    if (!hasBridge.value && !hasLights.value) {
+                        Text(
+                            text = "No bridge, press link button",
+                            style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
+                        )
+                    }
+                    if (hasBridge.value && !hasLights.value) {
+                        Text(
+                            text = "Made bridge, searching for lights",
+                            style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = onClick,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                    ) {
+                        Text(
+                            text = "Connect on ${HueCommunication.ip}",
+                            style = MaterialTheme.typography.button.copy(color = Color(0xFF462521))
+                        )
+                    }
                 }
             }
         }
     }
+    @Composable
+    fun loadingScreen(message: String) {
+        AlertDialog(
+            onDismissRequest = { },
+            buttons = {
+                Button(
+                    onClick = { isLoading.value = false },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Cancel")
+                }
+            },
+            title = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Loading...",
+                        color = Color(0xFF462521),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Text(
+                        text = message,
+                        color = Color(0xFF462521),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            },
+            text = {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF462521),
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            },
+            backgroundColor = Color(0xFFFFE0B5),
+            contentColor = Color.White
+        )
+    }
+
 
     @Composable
     fun HueLampConnections(
@@ -437,7 +409,6 @@ class MainActivity : ComponentActivity() {
             Text(
                 text = "Settings for $connectionName",
                 style = MaterialTheme.typography.h5,
-                modifier = Modifier.padding(4.dp)
             )
             DetailInfoTextField(
                 modelId = light?.modelid!!,
