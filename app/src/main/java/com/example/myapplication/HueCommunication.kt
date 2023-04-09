@@ -39,12 +39,12 @@ class HueCommunication {
         var testFinished = false
 
         fun makeBridgeConnection(username: String, callback: (() -> Unit)? = null) {
-            if(bridge.isEmpty()) {
+            if (bridge.isEmpty()) {
                 val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
                 val method = "GET"
                 makeBridgeRequest(message, method, callback)
                 Log.d(TAG, "Making bridge")
-            } else{
+            } else {
                 Log.d(TAG, "Already have bridge $bridge")
                 if (callback != null) {
                     callback()
@@ -97,7 +97,7 @@ class HueCommunication {
 
         fun turnLightOn(callback: (() -> Unit)? = null) {
             Log.d(TAG, "turning light on")
-            if(lights.isNotEmpty()){
+            if (lights.isNotEmpty()) {
                 lights[selectedLight]!!.state!!.on = true
                 makeRequest(
                     "/lights/$selectedLight/state",
@@ -118,7 +118,7 @@ class HueCommunication {
             callback: (() -> Unit)? = null
         ) {
             Log.d(TAG, "setting light status sat: $saturation, bri: $brightness, hue: $hue")
-            if(saturation !in 1..254 || brightness !in 1..254 || hue !in 0..65535){
+            if (saturation !in 1..254 || brightness !in 1..254 || hue !in 0..65535) {
                 return
             }
             val off = lights[selectedLight]!!.state!!.on
@@ -126,8 +126,8 @@ class HueCommunication {
             lights[selectedLight]!!.state!!.bri = brightness
             lights[selectedLight]!!.state!!.sat = saturation
             lights[selectedLight]!!.state!!.hue = hue
-            if(!off!!){
-                turnLightOn(){
+            if (!off!!) {
+                turnLightOn() {
                     sleep(100)
                     if (on) {
                         makeRequest(
@@ -272,7 +272,7 @@ class HueCommunication {
                             }
                             inputStream.close()
                             Log.d("$TAG : $tag", response.toString())
-                            if(response.toString().contains("unauthorized user")){
+                            if (response.toString().contains("unauthorized user")) {
                                 bridge = ""
                                 val message = "{\"devicetype\":\"hue_lamp_app#cnewuser\"}"
                                 val method = "GET"
@@ -309,7 +309,15 @@ class HueCommunication {
             }
 
         }
+
+
+        fun disconnect() {
+            Log.d(TAG, "Disconnecting from Hue bridge")
+            //bridge = ""
+            ip = "10.0.2.2/api/"
+            selectedLight = ""
+            lights = emptyMap()
+
+        }
     }
 }
-
-

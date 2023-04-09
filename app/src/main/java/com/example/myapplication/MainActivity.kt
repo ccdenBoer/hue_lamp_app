@@ -19,7 +19,9 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.*
+import androidx.compose.material.SnackbarDefaults.backgroundColor
 import androidx.compose.material.icons.Icons
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -27,9 +29,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -46,6 +52,7 @@ import com.example.myapplication.data.BridgeSaver
 import com.example.myapplication.data.colorToHue
 import com.philips.lighting.model.PHBridge
 import com.philips.lighting.model.PHHueParsingError
+import kotlinx.coroutines.delay
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.OutputStreamWriter
@@ -58,6 +65,8 @@ class MainActivity : ComponentActivity() {
 
     var hasBridge: MutableState<Boolean> = mutableStateOf(false)
     var hasLights: MutableState<Boolean> = mutableStateOf(false)
+    var isLoading: MutableState<Boolean> = mutableStateOf(false)
+    var standardIpAddress = "10.0.2.2"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -98,38 +107,106 @@ class MainActivity : ComponentActivity() {
 
         NavHost(navController, startDestination = "connect") {
             composable("connect") {
-                HueLampConnect(
-                    onClick = {
-                        HueCommunication.makeBridgeConnection("newuser") {
-                            val handler = Handler(Looper.getMainLooper())
-                            if(HueCommunication.bridge.isNotEmpty()){
-                                handler.post{
-                                    hasBridge.value = true
-                                    BridgeSaver.saveBridge(baseContext, HueCommunication.bridge)
-                                }
-                                HueCommunication.requestLights() {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Welcome to Hue Connect",
+                        fontSize = 24.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    var ipAddress by remember { mutableStateOf(standardIpAddress) }
+                    OutlinedTextField(
+                        value = ipAddress,
+                        onValueChange = { ipAddress = it },
+                        label = { Text("IP Address") },
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Button(
+                        onClick = {
+                            HueCommunication.setIP(ipAddress)
+                            isLoading.value = true
+                            HueCommunication.makeBridgeConnection("newuser") {
+                                val handler = Handler(Looper.getMainLooper())
+                                if (HueCommunication.bridge.isNotEmpty()) {
                                     handler.post {
-                                        if (HueCommunication.lights.isNotEmpty()) {
-                                            hasLights.value = true
-                                            navController.navigate("connectionList")
-                                        } else {
-                                            Log.d(TAG, "No lights")
+                                        hasBridge.value = true
+                                    }
+                                    HueCommunication.requestLights() {
+                                        handler.post {
+                                            if (HueCommunication.lights.isNotEmpty()) {
+                                                hasLights.value = true
+                                                navController.navigate("connectionList")
+                                            } else {
+                                                Log.d(TAG, "No lights")
+                                            }
+                                            isLoading.value = false
                                         }
                                     }
                                 }
                             }
 
-
-
-                        }
+                        },
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Connect")
                     }
-                )
+                    if (isLoading.value) {
+                        if (!hasBridge.value && !hasLights.value)
+                            loadingScreen(message = "Creating bridge, make sure it's on linking mode ")
+                        if (hasBridge.value && !hasLights.value)
+                            loadingScreen(message = "Created bridge, searching for lights")
+                        if (hasBridge.value && hasLights.value)
+                            loadingScreen(message = "Created bridge, found lights")
+
+
+                    }
+
+//                HueLampConnect(
+//                    onClick = {
+//                        HueCommunication.makeBridgeConnection("newuser") {
+//                            val handler = Handler(Looper.getMainLooper())
+//                            if(HueCommunication.bridge.isNotEmpty()){
+//                                handler.post{
+//                                    hasBridge.value = true
+//                                }
+//                                HueCommunication.requestLights() {
+//                                    handler.post {
+//                                        if (HueCommunication.lights.isNotEmpty()) {
+//                                            hasLights.value = true
+//                                            navController.navigate("connectionList")
+//                                        } else {
+//                                            Log.d(TAG, "No lights")
+//                                        }
+//                                    }
+//                                }
+//                            }
+//
+//
+//
+//                        }
+//                    }
+//                )
+                }
             }
             composable("connectionList") {
                 HueLampConnections(
                     connections = HueCommunication.lights,
                     onConnectionClick = {
                         navController.navigate("settings/${it.name}")
+                    },
+                    onDisconnectClick = {
+                        HueCommunication.disconnect()
+                        navController.navigate("connect")
                     }
                 )
             }
@@ -143,75 +220,141 @@ class MainActivity : ComponentActivity() {
                 })
             }
         }
-    }
 
-    @Composable
-    fun HueLampConnect(onClick: () -> Unit) {
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .background(Color(0xFF8A6552))
-                .clickable(onClick = onClick),
-            contentAlignment = Alignment.CenterStart
-        ) {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
+        @Composable
+        fun HueLampConnect(onClick: () -> Unit) {
+            Box(
                 modifier = Modifier
-                    .padding(16.dp)
+                    .fillMaxWidth()
+                    .padding(vertical = 8.dp)
+                    .background(Color(0xFF8A6552))
+                    .clickable(onClick = onClick),
+                contentAlignment = Alignment.CenterStart
             ) {
-                if(hasBridge.value && hasLights.value){
-                    Text(
-                        text = "Made bridge with lights",
-                        style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
-                    )
-                }
-                if(!hasBridge.value && !hasLights.value){
-                    Text(
-                        text = "No bridge, press link button",
-                        style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
-                    )
-                }
-                if(hasBridge.value && !hasLights.value){
-                    Text(
-                        text = "Made bridge, searching for lights",
-                        style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
-                    )
-                }
-
-                Spacer(modifier = Modifier.weight(1f))
-                Button(
-                    onClick = onClick,
-                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .padding(16.dp)
                 ) {
-                    Text(
-                        text = "Connect on ${HueCommunication.ip}",
-                        style = MaterialTheme.typography.button.copy(color = Color(0xFF462521))
-                    )
+                    if (hasBridge.value && hasLights.value) {
+                        Text(
+                            text = "Made bridge with lights",
+                            style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
+                        )
+                    }
+                    if (!hasBridge.value && !hasLights.value) {
+                        Text(
+                            text = "No bridge, press link button",
+                            style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
+                        )
+                    }
+                    if (hasBridge.value && !hasLights.value) {
+                        Text(
+                            text = "Made bridge, searching for lights",
+                            style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
+                        )
+                    }
+
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = onClick,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                    ) {
+                        Text(
+                            text = "Connect on ${HueCommunication.ip}",
+                            style = MaterialTheme.typography.button.copy(color = Color(0xFF462521))
+                        )
+                    }
                 }
             }
         }
     }
+    @Composable
+    fun loadingScreen(message: String) {
+        AlertDialog(
+            onDismissRequest = { },
+            buttons = {
+                Button(
+                    onClick = { isLoading.value = false },
+                    colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(text = "Cancel")
+                }
+            },
+            title = {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Text(
+                        text = "Loading...",
+                        color = Color(0xFF462521),
+                        fontWeight = FontWeight.Bold,
+                        fontSize = 20.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                    Text(
+                        text = message,
+                        color = Color(0xFF462521),
+                        fontWeight = FontWeight.Normal,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(vertical = 4.dp)
+                    )
+                }
+            },
+            text = {
+                Box(
+                    contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                ) {
+                    CircularProgressIndicator(
+                        color = Color(0xFF462521),
+                        modifier = Modifier.size(48.dp)
+                    )
+                }
+            },
+            backgroundColor = Color(0xFFFFE0B5),
+            contentColor = Color.White
+        )
+    }
+
 
     @Composable
     fun HueLampConnections(
         connections: Map<String, Light>,
-        onConnectionClick: (Light) -> Unit
+        onConnectionClick: (Light) -> Unit,
+        onDisconnectClick: () -> Unit
     ) {
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(top = 10.dp, start = 16.dp, end = 16.dp, bottom = 16.dp)
+                .padding(start = 16.dp, end = 16.dp)
         ) {
             connections.forEach { connection ->
                 Log.d(TAG, "Found 1 connection: ${connection.value.name}")
                 connection.value.name?.let {
-                    ConnectionItem(name = it, onClick = {
-                        HueCommunication.selectLight(connection.key)
-                        onConnectionClick(connection.value)
-                    })
+                    ConnectionItem(
+                        name = it,
+                        onClick = {
+                            HueCommunication.selectLight(connection.key)
+                            onConnectionClick(connection.value)
+                        }
+                    )
                 }
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            Button(
+                onClick = onDisconnectClick,
+                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = "Disconnect")
             }
         }
     }
@@ -237,6 +380,7 @@ class MainActivity : ComponentActivity() {
                     style = MaterialTheme.typography.h6.copy(color = Color(0xFF462521))
                 )
                 Spacer(modifier = Modifier.weight(1f))
+
                 Button(
                     onClick = onClick,
                     colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
@@ -266,7 +410,6 @@ class MainActivity : ComponentActivity() {
             Text(
                 text = "Settings for $connectionName",
                 style = MaterialTheme.typography.h5,
-                modifier = Modifier.padding(4.dp)
             )
             DetailInfoTextField(
                 modelId = light?.modelid!!,
@@ -307,7 +450,7 @@ class MainActivity : ComponentActivity() {
                     light.state!!.hue = newColors.first
                     light.state!!.sat = newColors.second.toInt()
                     light.state!!.bri = newColors.third.toInt()
-                    brightness.value = newColors.third / 254f
+                    brightness.value = newColors.third / 255f
                 }
             )
             Box(
