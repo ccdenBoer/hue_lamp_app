@@ -65,6 +65,7 @@ class MainActivity : ComponentActivity() {
     var hasBridge: MutableState<Boolean> = mutableStateOf(false)
     var hasLights: MutableState<Boolean> = mutableStateOf(false)
     var isLoading: MutableState<Boolean> = mutableStateOf(false)
+    var isLoadingBridge: MutableState<Boolean> = mutableStateOf(false)
     var standardIpAddress = "10.0.2.2"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -129,6 +130,7 @@ class MainActivity : ComponentActivity() {
                         onClick = {
                             HueCommunication.setIP(ipAddress)
                             isLoading.value = true
+                            isLoadingBridge.value = true
                             HueCommunication.makeBridgeConnection("newuser") {
                                 val handler = Handler(Looper.getMainLooper())
                                 if (HueCommunication.bridge.isNotEmpty()) {
@@ -148,6 +150,7 @@ class MainActivity : ComponentActivity() {
                                     }
                                 }
                             }
+                            isLoadingBridge.value = false
 
                         },
                         colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFBDB246)),
@@ -156,6 +159,52 @@ class MainActivity : ComponentActivity() {
                         Text(text = "Connect")
                     }
                     if (isLoading.value) {
+                        if(isLoadingBridge.value) {
+                            AlertDialog(
+                                onDismissRequest = { },
+                                buttons = {
+                                    Button(
+                                        onClick = { isLoading.value = false },
+                                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                                        modifier = Modifier.fillMaxWidth()
+                                    ) {
+                                        Text(text = "Cancel")
+                                    }
+                                },
+                                title = {
+                                    Text(
+                                        text = "Loading...",
+                                        color = Color(0xFF462521),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                    Text(
+                                        text = "Creating bridge",
+                                        color = Color(0xFF462521),
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 20.sp,
+                                        textAlign = TextAlign.Center,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                },
+                                text = {
+                                    Box(
+                                        contentAlignment = Alignment.Center,
+                                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                                    ) {
+                                        CircularProgressIndicator(
+                                            color = Color(0xFF462521),
+                                            modifier = Modifier.size(48.dp)
+                                        )
+                                    }
+                                },
+                                backgroundColor = Color(0xFFFFE0B5),
+                                contentColor = Color.White
+                            )
+                        }
+                        } else {
                         AlertDialog(
                             onDismissRequest = { },
                             buttons = {
@@ -170,6 +219,14 @@ class MainActivity : ComponentActivity() {
                             title = {
                                 Text(
                                     text = "Loading...",
+                                    color = Color(0xFF462521),
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 20.sp,
+                                    textAlign = TextAlign.Center,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                                Text(
+                                    text = "Made bridge, searching for lights",
                                     color = Color(0xFF462521),
                                     fontWeight = FontWeight.Bold,
                                     fontSize = 20.sp,
@@ -191,7 +248,8 @@ class MainActivity : ComponentActivity() {
                             backgroundColor = Color(0xFFFFE0B5),
                             contentColor = Color.White
                         )
-                    }
+                        }
+
 
                 }
 

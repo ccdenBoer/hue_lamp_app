@@ -5,6 +5,7 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="6919a440-8ec7-48e7-819b-3a7df5e8178f" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4/checksums/checksums.lock" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/7.4/checksums/checksums.lock" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4/checksums/md5-checksums.bin" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.gradle/7.4/checksums/sha1-checksums.bin" beforeDir="false" />
@@ -20,11 +21,48 @@
       <change beforePath="$PROJECT_DIR$/.gradle/file-system.probe" beforeDir="false" afterPath="$PROJECT_DIR$/.gradle/file-system.probe" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/deploymentTargetDropDown.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/deploymentTargetDropDown.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/HueCommunication.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/HueCommunication.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/app/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/proguard-rules.pro" beforeDir="false" afterPath="$PROJECT_DIR$/app/proguard-rules.pro" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/androidTest/java/com/example/myapplication/ExampleInstrumentedTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/androidTest/java/com/example/myapplication/ExampleInstrumentedTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/AndroidManifest.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/MainActivity.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/MainActivity.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Color.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Color.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Shape.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Shape.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Theme.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Theme.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Type.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/java/com/example/myapplication/ui/theme/Type.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/drawable-v24/ic_launcher_foreground.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/drawable/ic_launcher_background.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/drawable/ic_launcher_background.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/colors.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/strings.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/values/themes.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/backup_rules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/xml/backup_rules.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/src/main/res/xml/data_extraction_rules.xml" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/main/res/xml/data_extraction_rules.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/src/test/java/com/example/myapplication/ExampleUnitTest.kt" beforeDir="false" afterPath="$PROJECT_DIR$/app/src/test/java/com/example/myapplication/ExampleUnitTest.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradle.properties" beforeDir="false" afterPath="$PROJECT_DIR$/gradle.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/gradlew" beforeDir="false" afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/api/colorpicker-compose.api" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/api/colorpicker-compose.api" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/build.gradle" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/AndroidManifest.xml" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/AndroidManifest.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/AlphaSlider.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/AlphaSlider.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/AlphaTile.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/AlphaTile.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/AlphaTileDrawable.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/AlphaTileDrawable.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/BitmapCalculator.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/BitmapCalculator.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/BrightnessSlider.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/BrightnessSlider.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ColorEnvelope.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ColorEnvelope.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ColorExtensions.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ColorExtensions.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ColorPickerController.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ColorPickerController.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/DefaultColors.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/DefaultColors.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/HsvBitmapDrawable.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/HsvBitmapDrawable.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/HsvColorPicker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/HsvColorPicker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ImageColorPicker.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/ImageColorPicker.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/PaletteContentScale.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/PaletteContentScale.kt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/PointMapper.kt" beforeDir="false" afterPath="$PROJECT_DIR$/libs/colorpicker-compose/src/main/kotlin/com/github/skydoves/colorpicker/compose/PointMapper.kt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/local.properties" beforeDir="false" afterPath="$PROJECT_DIR$/local.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
