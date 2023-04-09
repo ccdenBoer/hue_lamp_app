@@ -199,8 +199,14 @@ class MainActivity : ComponentActivity() {
                 }
             }
             composable("connectionList") {
+                val extendedLights = mutableMapOf<String, Light>()
+                HueCommunication.lights.forEach { (key, value) ->
+                    extendedLights[key] = value
+                    extendedLights["$key-copy1"] = value
+                    extendedLights["$key-copy2"] = value
+                }
                 HueLampConnections(
-                    connections = HueCommunication.lights,
+                    connections = extendedLights,
                     onConnectionClick = {
                         navController.navigate("settings/${it.name}")
                     },
@@ -331,30 +337,36 @@ class MainActivity : ComponentActivity() {
         onConnectionClick: (Light) -> Unit,
         onDisconnectClick: () -> Unit
     ) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(start = 16.dp, end = 16.dp)
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
         ) {
-            connections.forEach { connection ->
-                Log.d(TAG, "Found 1 connection: ${connection.value.name}")
-                connection.value.name?.let {
-                    ConnectionItem(
-                        name = it,
-                        onClick = {
-                            HueCommunication.selectLight(connection.key)
-                            onConnectionClick(connection.value)
+            item {
+                Column(
+                    modifier = Modifier
+                        .padding(start = 16.dp, end = 16.dp)
+                        .fillMaxWidth()
+                ) {
+                    connections.forEach { connection ->
+                        Log.d(TAG, "Found 1 connection: ${connection.value.name}")
+                        connection.value.name?.let {
+                            ConnectionItem(
+                                name = it,
+                                onClick = {
+                                    HueCommunication.selectLight(connection.key)
+                                    onConnectionClick(connection.value)
+                                }
+                            )
                         }
-                    )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = onDisconnectClick,
+                        colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(text = "Disconnect")
+                    }
                 }
-            }
-            Spacer(modifier = Modifier.weight(1f))
-            Button(
-                onClick = onDisconnectClick,
-                colors = ButtonDefaults.buttonColors(backgroundColor = Color(0xFFCA2E55)),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(text = "Disconnect")
             }
         }
     }
