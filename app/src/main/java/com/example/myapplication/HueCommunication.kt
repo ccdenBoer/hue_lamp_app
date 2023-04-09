@@ -39,10 +39,18 @@ class HueCommunication {
         var testFinished = false
 
         fun makeBridgeConnection(username: String, callback: (() -> Unit)? = null) {
-            val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
-            val method = "GET"
-            makeBridgeRequest(message, method, callback)
-            Log.d(TAG, "Making bridge")
+            if(bridge.isEmpty()) {
+                val message = "{\"devicetype\":\"hue_lamp_app#c$username\"}"
+                val method = "GET"
+                makeBridgeRequest(message, method, callback)
+                Log.d(TAG, "Making bridge")
+            } else{
+                Log.d(TAG, "Already have bridge $bridge")
+                if (callback != null) {
+                    callback()
+                }
+            }
+
 
         }
 
@@ -51,11 +59,6 @@ class HueCommunication {
             if (regex.matches(newIP))
                 ip = "$newIP/api/"
         }
-
-/*        fun setIP(context: Context) {
-            val wm = context.getSystemService(Context.WIFI_SERVICE) as WifiManager
-            setIP(Formatter.formatIpAddress(wm.connectionInfo.ipAddress))
-        }*/
 
         fun setEmIP(port: Int, emulator: Boolean) {
             if (port in 1..65535) {
@@ -269,6 +272,16 @@ class HueCommunication {
                             }
                             inputStream.close()
                             Log.d("$TAG : $tag", response.toString())
+                            if(response.toString().contains("unauthorized user")){
+                                bridge = ""
+                                val message = "{\"devicetype\":\"hue_lamp_app#cnewuser\"}"
+                                val method = "GET"
+                                makeBridgeRequest(message, method, callback)
+                                Log.d(TAG, "Making bridge")
+                                return
+                            }
+
+
                             when (tag) {
                                 "request lights" -> {
                                     lights = lightsJSONToData(response.toString())
@@ -277,7 +290,7 @@ class HueCommunication {
                             }
 
                         } else {
-                            println("GET request failed with response code $responseCode")
+                            println("request failed with response code $responseCode")
                         }
                         if (callback != null) {
                             callback()

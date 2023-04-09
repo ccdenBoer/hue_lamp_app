@@ -42,6 +42,7 @@ import com.philips.lighting.hue.sdk.*
 import com.philips.lighting.hue.sdk.exception.*
 import com.philips.lighting.hue.sdk.utilities.*
 import androidx.core.graphics.ColorUtils
+import com.example.myapplication.data.BridgeSaver
 import com.example.myapplication.data.colorToHue
 import com.philips.lighting.model.PHBridge
 import com.philips.lighting.model.PHHueParsingError
@@ -60,7 +61,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        HueCommunication.bridge = BridgeSaver.loadBridge(this)
         setContent {
             MyApplicationTheme {
                 Surface(
@@ -104,6 +105,7 @@ class MainActivity : ComponentActivity() {
                             if(HueCommunication.bridge.isNotEmpty()){
                                 handler.post{
                                     hasBridge.value = true
+                                    BridgeSaver.saveBridge(baseContext, HueCommunication.bridge)
                                 }
                                 HueCommunication.requestLights() {
                                     handler.post {
