@@ -160,6 +160,7 @@ class DataUnitTest {
 
     @Test
     fun Unhappy_selectLight(){
+        val l = Light()
         HueCommunication.lights = makeLights()
         HueCommunication.selectLight("4")
         assert(HueCommunication.selectedLight.isEmpty())

@@ -9,26 +9,31 @@ import java.nio.charset.Charset
 class BridgeSaver {
     companion object {
         val TAG = "BirdgeSaver"
-        fun saveBridge(context: Context, bridge: String) {
-            Log.d("Lang.kt", "saving settings")
+        fun saveBridge(context: Context, bridge: String, filename: String) {
+            Log.d(TAG, "saving settings")
 
-            val resDir = context?.getDir("HueLight", Context.MODE_PRIVATE)
-            File(resDir, "bridge.txt").createNewFile()
+            try {
+                val resDir = context?.getDir("HueLight", Context.MODE_PRIVATE)
+                Log.d(TAG, resDir.absolutePath)
+                File(resDir, filename).createNewFile()
 
-            File(resDir, "bridge.txt").printWriter().use { out ->
-                out.println(bridge)
+                File(resDir, filename).printWriter().use { out ->
+                    out.println(bridge)
+                }
+            } catch (error : Exception){
+                Log.d(TAG, error.message.toString())
             }
         }
 
         var loaded = false
 
-        fun loadBridge(context: Context): String {
-            Log.d("Lang.kt", "Loading settings")
+        fun loadBridge(context: Context,filename: String): String {
+            Log.d(TAG, "Loading settings")
 
             val resDir = context.getDir("HueLight", Context.MODE_PRIVATE)
-            if (File(resDir, "bridge.txt").exists() && !loaded) {
+            if (File(resDir, filename).exists() && !loaded) {
                 try {
-                    File(resDir, "bridge.txt").reader(Charset.defaultCharset()).use { re ->
+                    File(resDir, filename).reader(Charset.defaultCharset()).use { re ->
                         val lines = re.readLines()
                         loaded = true
                         return lines[0]

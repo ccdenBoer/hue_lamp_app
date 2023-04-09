@@ -24,7 +24,4 @@ fun lightsJSONToData(json: String): Map<String, Light>{
     }catch (e:Exception){
         return emptyMap()
     }
-
-
-
 }

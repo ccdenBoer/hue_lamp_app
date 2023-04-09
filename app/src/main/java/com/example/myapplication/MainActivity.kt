@@ -70,7 +70,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        HueCommunication.bridge = BridgeSaver.loadBridge(this)
+        HueCommunication.bridge = BridgeSaver.loadBridge(this, "bridge.txt")
         setContent {
             MyApplicationTheme {
                 Surface(

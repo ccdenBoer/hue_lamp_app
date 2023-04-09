@@ -7,15 +7,15 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 
 data class Light(
-    var state: State? = null,
-    var swupdate: Swupdate? = null,
+    var state: State? = State(),
+    var swupdate: Swupdate? = Swupdate(),
     var type: String? = null,
     var name: String? = null,
     var modelid: String? = null,
     var manufacturername: String? = null,
     var productname: String? = null,
-    var capabilities: Capabilities? = null,
-    var config: Config? = null,
+    var capabilities: Capabilities? = Capabilities(),
+    var config: Config? = Config(),
     var uniqueid: String? = null,
     var swversion: String? = null,
     var pointsymbol: Map<String, String>? = null
@@ -44,8 +44,8 @@ data class Swupdate(
 
 data class Capabilities(
     var certified: Boolean? = false,
-    var control: Control? = null,
-    var streaming: Streaming? = null
+    var control: Control? = Control(),
+    var streaming: Streaming? = Streaming()
 )
 
 data class Control(
@@ -53,7 +53,7 @@ data class Control(
     var maxlumen: Int? = 0,
     var colorgamuttype: String? = null,
     var colorgamut: List<List<Double>>? = emptyList(),
-    var ct: Ct? = null
+    var ct: Ct? = Ct()
 )
 
 data class Ct(

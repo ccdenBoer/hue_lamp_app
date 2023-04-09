@@ -121,13 +121,14 @@ class HueCommunication {
             if (saturation !in 1..254 || brightness !in 1..254 || hue !in 0..65535) {
                 return
             }
-            val off = lights[selectedLight]!!.state!!.on
+            val wasOn = lights[selectedLight]!!.state!!.on
             lights[selectedLight]!!.state!!.on = on
             lights[selectedLight]!!.state!!.bri = brightness
             lights[selectedLight]!!.state!!.sat = saturation
             lights[selectedLight]!!.state!!.hue = hue
-            if (!off!!) {
+            if (!wasOn!!) {
                 turnLightOn() {
+                    testFinished = false
                     sleep(100)
                     if (on) {
                         makeRequest(
@@ -145,6 +146,7 @@ class HueCommunication {
                             "light status",
                             callback = callback
                         )
+                        testFinished = false
                         turnLightOff()
                     }
                 }
