@@ -199,14 +199,8 @@ class MainActivity : ComponentActivity() {
                 }
             }
             composable("connectionList") {
-                val extendedLights = mutableMapOf<String, Light>()
-                HueCommunication.lights.forEach { (key, value) ->
-                    extendedLights[key] = value
-                    extendedLights["$key-copy1"] = value
-                    extendedLights["$key-copy2"] = value
-                }
                 HueLampConnections(
-                    connections = extendedLights,
+                    connections = HueCommunication.lights,
                     onConnectionClick = {
                         navController.navigate("settings/${it.name}")
                     },
